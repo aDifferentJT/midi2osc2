@@ -6,13 +6,13 @@
 int main(int argc, char* argv[]) {
   std::unordered_map<std::string, Output*> outputs;
 
+  Midi midi("MIDI Mix", "akai_midimix.profile");
+
+  OSC qlc("127.0.0.1", 7700, 9000);
   OSC::init();
-  OSC qlc("127.0.0.1", 7700, 9000, [](OSC::Message message){});
   outputs["QLC+"] = &qlc;
 
-  Mappings mappings(std::vector({(std::string)"test.mapping"}), outputs);
-
-  Midi midi("MIDI Mix", mappings.respond, "akai_midimix.profile");
+  Mappings mappings({(std::string)"test.mapping"}, &midi, outputs);
 
   std::promise<void>().get_future().wait();
 }

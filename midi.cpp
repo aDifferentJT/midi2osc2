@@ -3,28 +3,30 @@
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-Midi::Event::Event(std::string control, std::variant<bool, uint8_t> value)
-  : control(control)
-    , value(std::visit(overloaded
-          { [](bool v) { return v ? 1.0 : 0.0; }
-          , [](uint8_t v) { return (float)v / 127.0; }
-          }, value))
-{}
+/*
+   Midi::Event::Event(std::string control, std::variant<bool, uint8_t> value)
+   : control(control)
+   , value(std::visit(overloaded
+   { [](bool v)    -> float { return v ? 1.0 : 0.0; }
+   , [](uint8_t v) -> float { return (float)v / 127.0; }
+   }, value))
+   {}
+   */
 
 Midi::MidiEvent::MidiEvent(std::vector<unsigned char> message) {
   switch (message[0]) {
     case 0x90:
-      control.type = ControlType::Button;
+      control.type = Control::Type::Button;
       control.number = message[1];
       value = true;
       break;
     case 0x80:
-      control.type = ControlType::Button;
+      control.type = Control::Type::Button;
       control.number = message[1];
       value = false;
       break;
     case 0xB0:
-      control.type = ControlType::Fader;
+      control.type = Control::Type::Fader;
       control.number = message[1];
       if (message.size() == 2) {
         value = (uint8_t)0;
@@ -41,10 +43,10 @@ Midi::Profile::Profile(std::string filename) {
     Control c;
     switch (f.get()) {
       case 'B':
-        c.type = ControlType::Button;
+        c.type = Control::Type::Button;
         break;
       case 'F':
-        c.type = ControlType::Fader;
+        c.type = Control::Type::Fader;
         break;
       case std::char_traits<char>::eof():
         return;
@@ -60,31 +62,44 @@ Midi::Profile::Profile(std::string filename) {
     assert(f.get() == ':');
     std::string str;
     std::getline(f, str);
-    size_t feedbackCatchInd = str.find(":");
-    std::string name = str.substr(0, feedbackCatchInd);
+    size_t catchIndicatorInd = str.find(":");
+    std::string name = str.substr(0, catchIndicatorInd);
     mapControlToString[cEnc] = name;
     mapStringToControl[name] = cEnc;
-    if (feedbackCatchInd != std::string::npos) {
-      feedbackCatchMap[name] = str.substr(feedbackCatchInd + 1, std::string::npos);
+    if (catchIndicatorInd != std::string::npos) {
+      catchIndicatorMap[name] = str.substr(catchIndicatorInd + 1, std::string::npos);
     }
   }
 }
 
 std::string Midi::Profile::stringFromControl(Control c) {
-  return mapControlToString[((int)c.type << 8) | c.number];
+  return mapControlToString.at(((int)c.type << 8) | c.number);
 }
 Midi::Control Midi::Profile::controlFromString(std::string str) {
-  int cEnc = mapStringToControl[str];
-  return {(Midi::ControlType)(cEnc >> 8), (uint8_t)(cEnc & 0xFF)};
+  int cEnc = mapStringToControl.at(str);
+  return {(Midi::Control::Type)(cEnc >> 8), (uint8_t)(cEnc & 0xFF)};
 }
-std::string Midi::Profile::feedbackCatch(std::string str) {
-  return feedbackCatchMap[str];
+std::optional<Midi::Control> Midi::Profile::catchIndicator(Control c) {
+  try {
+    return controlFromString(catchIndicatorMap.at(stringFromControl(c)));
+  } catch (std::out_of_range) {
+    return std::nullopt;
+  }
 }
 
-Midi::Midi(std::string deviceName, std::function<void(Event)> recvCallback, std::string profileFilename)
+void Midi::setLed(uint8_t number, bool value) {
+  std::vector<unsigned char> message({0x90, number, value ? (uint8_t)0x7F : (uint8_t)0x00});
+  rtMidiOut.sendMessage(&message);
+}
+
+template <typename T>
+bool inBounds(T a, T b, T c) {
+  return (a <= b && b <= c) || (a >= b && b >= c);
+}
+
+Midi::Midi(std::string deviceName, std::string profileFilename)
   : rtMidiIn(RtMidi::UNSPECIFIED, "midi2osc2")
   , rtMidiOut(RtMidi::UNSPECIFIED, "midi2osc2")
-  , recvCallback(recvCallback)
     , profile(profileFilename)
 {
   portNumber = -1;
@@ -102,26 +117,67 @@ Midi::Midi(std::string deviceName, std::function<void(Event)> recvCallback, std:
   rtMidiIn.openPort(portNumber);
   rtMidiOut.openPort(portNumber);
   rtMidiIn.setCallback([](double timeStamp, std::vector<unsigned char>* message, void* userData){
-      Midi* midi = (Midi*)userData;
-      MidiEvent event(*message);
-      if (event.control.type == ControlType::Button) {
-      if (std::get<bool>(event.value) == true) {
-      try {
-      midi->buttonStates[event.control.number] = !midi->buttonStates.at(event.control.number);
-      } catch (std::out_of_range) {
-      midi->buttonStates[event.control.number] = true;
-      }
-      }
-      event.value = midi->buttonStates[event.control.number];
-      midi->setLed(event.control.number, std::get<bool>(event.value));
-      }
-      std::string control = midi->profile.stringFromControl(event.control);
-      midi->recvCallback(Event(control, event.value));
-      }, this);
+    Midi* midi = (Midi*)userData;
+    MidiEvent event(*message);
+    std::string control = midi->profile.stringFromControl(event.control);
+    float value;
+    switch (event.control.type) {
+      case Control::Type::Button:
+        if (std::get<bool>(event.value) == true) {
+          try {
+            midi->buttonStates[event.control.number] = !midi->buttonStates.at(event.control.number);
+          } catch (std::out_of_range) {
+            midi->buttonStates[event.control.number] = true;
+          }
+        }
+        value = midi->buttonStates[event.control.number] ? 1.0 : 0.0;
+        midi->setLed(event.control.number, value);
+        midi->callback({control, value});
+        break;
+      case Control::Type::Fader:
+        value = (float)std::get<uint8_t>(event.value) / 127.0;
+        try {
+          FaderState state = midi->faderStates.at(event.control.number);
+          if (state.received
+              && !((state.moved && inBounds(value, *state.received, *state.moved))
+                   || fabs(value - *state.received) < 0.01)) {
+            midi->faderStates[event.control.number] = {value, state.received};
+          } else {
+            midi->faderStates[event.control.number] = {value, std::nullopt};
+          }
+        } catch (std::out_of_range) {
+          midi->faderStates[event.control.number] = {value, std::nullopt};
+        }
+        if (std::optional<Control> indicator = midi->profile.catchIndicator(event.control)) {
+          midi->setLed(indicator->number, midi->faderStates.at(event.control.number).received.has_value());
+        }
+        if (!midi->faderStates.at(event.control.number).received.has_value()) {
+          midi->callback({control, value});
+        }
+        break;
+    }
+  }, this);
 }
 
-void Midi::setLed(uint8_t number, bool value) {
-  std::vector<unsigned char> message({0x90, number, value ? (uint8_t)0x7F : (uint8_t)0x00});
-  rtMidiOut.sendMessage(&message);
+void Midi::feedback(std::string controlS, float v) {
+  Control control = profile.controlFromString(controlS);
+  switch (control.type) {
+    case Control::Type::Button:
+      setLed(control.number, v);
+    case Control::Type::Fader:
+      try {
+        FaderState state = faderStates.at(control.number);
+        if (state.moved && std::fabs(v - *state.moved) < 0.01) {
+          faderStates[control.number] = {state.moved, std::nullopt};
+        } else {
+          faderStates[control.number] = {state.moved, v};
+        }
+      } catch (std::out_of_range) {
+        faderStates[control.number] = {std::nullopt, v};
+      }
+      if (std::optional<Control> indicator = profile.catchIndicator(control)) {
+        setLed(indicator->number, faderStates.at(control.number).received.has_value());
+      }
+  }
 }
 

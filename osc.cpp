@@ -66,12 +66,11 @@ std::vector<char> concat(Types... datas) {
 }
 
 std::vector<char> OSC::Message::makeArgument(Argument arg) {
-  //return data_from_variant(arg);
   return std::visit(overloaded
-      { [](int32_t v) { return makeOSCnum(v); }
-      , [](float v) { return makeOSCnum(v); }
-      , [](std::string v) { return makeOSCstring(v); }
-      , [](std::vector<char> v) { return makeOSCstring(concat(makeOSCnum((int32_t)v.size()), v)); }
+      { [](int32_t v)           -> std::vector<char> { return makeOSCnum(v); }
+      , [](float v)             -> std::vector<char> { return makeOSCnum(v); }
+      , [](std::string v)       -> std::vector<char> { return makeOSCstring(v); }
+      , [](std::vector<char> v) -> std::vector<char> { return makeOSCstring(concat(makeOSCnum((int32_t)v.size()), v)); }
       }, arg);
 }
 
@@ -79,13 +78,6 @@ std::vector<char> OSC::Message::makeArguments(std::vector<Argument> arg) {
   std::vector<std::vector<char>> data;
   std::transform(arg.begin(), arg.end(), std::back_inserter(data), makeArgument);
   return concatIt(data);
-}
-
-std::vector<char> OSC::Message::toPacket() {
-  return concat( makeOSCstring(addressPattern)
-      , makeTypeTagString(types)
-      , makeArguments(arguments)
-      );
 }
 
 OSC::Message::Message(std::vector<char> packet) {
@@ -111,11 +103,11 @@ OSC::Message::Message(std::vector<char> packet) {
     for (Type t : types) {
       switch (t) {
         case Type::i:
-          arguments.push_back(*(int32_t*)argumentsIt);
+          arguments.push_back(unmakeOSCnum<int32_t>(argumentsIt));
           argumentsIt += sizeof(int32_t);
           break;
         case Type::f:
-          arguments.push_back(*(float*)argumentsIt);
+          arguments.push_back(unmakeOSCnum<float>(argumentsIt));
           argumentsIt += sizeof(float);
           break;
         case Type::s:
@@ -142,6 +134,23 @@ OSC::Message::Message(std::vector<char> packet) {
   }
 }
 
+std::vector<char> OSC::Message::toPacket() {
+  return concat( makeOSCstring(addressPattern)
+      , makeTypeTagString(types)
+      , makeArguments(arguments)
+      );
+}
+
+float OSC::Message::toFloat() {
+  assert(arguments.size() == 1);
+  return std::visit(overloaded
+      { [](int32_t v)           -> float { return (float)v; }
+      , [](float v)             -> float { return v; }
+      , [](std::string v)       -> float { throw; }
+      , [](std::vector<char> v) -> float { throw; }
+      }, arguments[0]);
+}
+
 void OSC::init() {
   asio::executor_work_guard<asio::io_context::executor_type> work
     = asio::make_work_guard(io_context);
@@ -152,15 +161,14 @@ void OSC::init() {
 using namespace std::placeholders;
 
 void OSC::recvHandler(const asio::error_code& error, size_t count_recv) {
-  recvCallback(Message(recvBuffer));
+  callback(Message(recvBuffer));
   socket.async_receive_from(asio::buffer(recvBuffer), recvEndpoint, std::bind(&OSC::recvHandler, this, _1, _2));
 }
 
-OSC::OSC(std::string ip, unsigned short sendPort, unsigned short recvPort, std::function<void(Message)> recvCallback)
+OSC::OSC(std::string ip, unsigned short sendPort, unsigned short recvPort)
   : sendPort(sendPort)
   , address(asio::ip::make_address(ip.c_str()))
   , socket(io_context, udp::endpoint(asio::ip::address(asio::ip::address_v4::any()), recvPort))
-  , recvCallback(recvCallback)
     , recvBuffer(1024)
 {
   socket.async_receive_from(asio::buffer(recvBuffer), recvEndpoint, std::bind(&OSC::recvHandler, this, _1, _2));

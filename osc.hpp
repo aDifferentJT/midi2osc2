@@ -7,6 +7,7 @@
 #include <asio.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <numeric>
@@ -44,6 +45,21 @@ class OSC : public Output {
             return res;
           }
         template <typename T>
+          static T unmakeOSCnum(std::vector<char> v) {
+            if (std::endian::native == std::endian::little) {
+              std::reverse(v.begin(), v.end());
+            }
+            return *(T*)v.begin();
+          }
+        template <typename T>
+          static T unmakeOSCnum(char* v) {
+            size_t n = sizeof(T);
+            if (std::endian::native == std::endian::little) {
+              std::reverse(v, v + n);
+            }
+            return *(T*)v;
+          }
+        template <typename T>
           static std::vector<char> makeOSCstring(T str) {
             size_t pad = 3 - ((str.size() + 3) % 4);
             std::vector<char> v(str.begin(), str.end());
@@ -79,6 +95,7 @@ class OSC : public Output {
           }
         std::vector<char> toPacket();
         Message(std::vector<char> packet);
+        float toFloat();
     };
   private:
     static asio::io_context io_context;
@@ -87,17 +104,19 @@ class OSC : public Output {
     const asio::ip::address address;
     udp::socket socket;
 
-    std::function<void(Message)> recvCallback;
+    std::function<void(Message)> callback = [](Message m){};
     std::vector<char> recvBuffer;
     udp::socket::endpoint_type recvEndpoint;
     void recvHandler(const asio::error_code& error, size_t count_recv);
   public:
     static void init();
-    OSC(std::string ip, unsigned short sendPort, unsigned short recvPort, std::function<void(Message)> recvCallback);
+    OSC(std::string ip, unsigned short sendPort, unsigned short recvPort);
     void send(Message message);
     virtual void send(std::string addressPattern, float arg) { send(Message(addressPattern, arg)); }
     template <typename... Args>
       void send(std::string addressPattern, Args... args) { send(Message(addressPattern, args...)); }
+    void setCallback(std::function<void(Message)> f) { callback = f; }
+    virtual void setCallback(std::function<void(std::string, float)> f) { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
 };
 
 #endif

@@ -4,11 +4,13 @@
 #include <rtmidi/RtMidi.h>
 
 #include <cassert>
+#include <cmath>
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <unordered_map>
+#include <optional>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -17,12 +19,12 @@ class Midi {
     struct Event {
       std::string control;
       float value;
-      Event(std::string control, std::variant<bool, uint8_t> value);
+      //Event(std::string control, std::variant<bool, uint8_t> value);
     };
   private:
-    enum class ControlType { Button, Fader };
     struct Control {
-      ControlType type;
+      enum class Type { Button, Fader };
+      Type type;
       uint8_t number;
     };
     struct MidiEvent {
@@ -34,22 +36,30 @@ class Midi {
       private:
         std::unordered_map<int, std::string> mapControlToString;
         std::unordered_map<std::string, int> mapStringToControl;
-        std::unordered_map<std::string, std::string> feedbackCatchMap;
+        std::unordered_map<std::string, std::string> catchIndicatorMap;
       public:
         Profile(std::string filename);
         std::string stringFromControl(Control);
         Control controlFromString(std::string);
-        std::string feedbackCatch(std::string);
+        std::optional<Control> catchIndicator(Control);
+    };
+    struct FaderState {
+      std::optional<float> moved;
+      std::optional<float> received;
     };
     RtMidiIn rtMidiIn;
     RtMidiOut rtMidiOut;
     unsigned int portNumber;
-    std::function<void(Event)> recvCallback;
+    std::function<void(Event)> callback = [](Event e){};
     std::unordered_map<uint8_t, bool> buttonStates;
+    std::unordered_map<uint8_t, FaderState> faderStates;
     Profile profile;
-  public:
-    Midi(std::string deviceName, std::function<void(Event)> recvCallback, std::string profileFilename);
+
     void setLed(uint8_t number, bool value);
+  public:
+    Midi(std::string deviceName, std::string profileFilename);
+    void feedback(std::string control, float v);
+    void setCallback(std::function<void(Event)> f) { callback = f; }
 };
 
 #endif
