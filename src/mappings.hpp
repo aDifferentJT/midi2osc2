@@ -18,11 +18,10 @@ class Mappings {
       std::string path;
     };
     struct Mapping {
-       std::unordered_map<std::string, Channel> channels;
-       std::unordered_map<std::string, std::string> feedbacks;
+      std::unordered_map<std::string, Channel> channels;
+      std::unordered_map<std::string, std::string> feedbacks;
     };
     std::vector<std::string> filenames;
-    Midi* midi;
     std::unordered_map<std::string, Output*> outputs;
     std::vector<Mapping> mappings;
     int currentMappingIndex = 0;
@@ -30,20 +29,8 @@ class Mappings {
   public:
     Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs);
     Mappings(std::initializer_list<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs)
-      : Mappings(std::vector(filenames), midi, outputs) {}
+      : Mappings(std::vector(filenames), midi, std::move(outputs)) {}
     void write();
-    std::function<void(Midi::Event)> respond = [this](Midi::Event event) {
-      try {
-        Channel channel = currentMapping().channels.at(event.control);
-        outputs[channel.output]->send(channel.path, event.value);
-      } catch (std::out_of_range) {}
-    };
-    std::function<void(std::string, float)> feedback = [this](std::string path, float v) {
-      try {
-        std::string control = currentMapping().feedbacks.at(path);
-        midi->feedback(control, v);
-      } catch (std::out_of_range) {}
-    };
 };
 
 #endif

@@ -1,0 +1,1 @@
+run-clang-tidy -header-filter='.*' -checks='cppcoreguidelines-*,clang-analyzer-*,modernize-*,performance-*,portability-*,readability-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-reinterpret-cast'

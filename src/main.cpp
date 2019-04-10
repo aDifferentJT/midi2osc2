@@ -4,6 +4,10 @@
 #include "output.hpp"
 
 int main(int argc, char* argv[]) {
+
+  (void)argc;
+  (void)argv;
+
   std::unordered_map<std::string, Output*> outputs;
 
   Midi midi("MIDI Mix", "akai_midimix.profile");

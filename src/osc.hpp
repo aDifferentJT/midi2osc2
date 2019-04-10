@@ -31,8 +31,8 @@ class OSC : public Output {
         std::string addressPattern;
         std::vector<Type> types;
         std::vector<Argument> arguments;
-        Message(std::string addressPattern, std::vector<Type> types, std::vector<Argument> arguments)
-          : addressPattern(addressPattern), types(types), arguments(arguments) {}
+        Message(std::string  addressPattern, std::vector<Type>  types, std::vector<Argument>  arguments)
+          : addressPattern(std::move(std::move(addressPattern))), types(std::move(std::move(types))), arguments(std::move(std::move(arguments))) {}
       private:
         template <typename T>
           static std::vector<char> makeOSCnum(T v) {
@@ -63,7 +63,7 @@ class OSC : public Output {
           static std::vector<char> makeOSCstring(T str) {
             size_t pad = 3 - ((str.size() + 3) % 4);
             std::vector<char> v(str.begin(), str.end());
-            for(int i = 0; i < pad; i++) {
+            for(size_t i = 0; i < pad; i++) {
               v.push_back('\0');
             }
             return v;
@@ -72,9 +72,9 @@ class OSC : public Output {
         static std::vector<char> makeArgument(Argument arg);
         static std::vector<char> makeArguments(std::vector<Argument> arg);
       public:
-        Message(std::string addressPattern) : addressPattern(addressPattern) {}
+        explicit Message(std::string addressPattern) : addressPattern(std::move(std::move(addressPattern))) {}
         template <typename... Args>
-          Message(std::string addressPattern, int arg, Args... args) : Message(addressPattern, args...) {
+          Message(std::string addressPattern, int arg, Args... args) : Message(std::move(addressPattern), args...) {
             types.insert(types.begin(), Type::i);
             arguments.insert(arguments.begin(), arg);
           }
@@ -94,7 +94,7 @@ class OSC : public Output {
             arguments.insert(arguments.begin(), arg);
           }
         std::vector<char> toPacket();
-        Message(std::vector<char> packet);
+        explicit Message(std::vector<char> packet);
         float toFloat();
     };
   private:
@@ -104,19 +104,19 @@ class OSC : public Output {
     const asio::ip::address address;
     udp::socket socket;
 
-    std::function<void(Message)> callback = [](Message m){};
+    std::function<void(Message)> callback = [](Message m){ (void)m; };
     std::vector<char> recvBuffer;
     udp::socket::endpoint_type recvEndpoint;
     void recvHandler(const asio::error_code& error, size_t count_recv);
   public:
     static void init();
-    OSC(std::string ip, unsigned short sendPort, unsigned short recvPort);
+    OSC(const std::string& ip, unsigned short sendPort, unsigned short recvPort);
     void send(Message message);
-    virtual void send(std::string addressPattern, float arg) { send(Message(addressPattern, arg)); }
+    void send(std::string addressPattern, float arg) override { send(Message(addressPattern, arg)); }
     template <typename... Args>
       void send(std::string addressPattern, Args... args) { send(Message(addressPattern, args...)); }
-    void setCallback(std::function<void(Message)> f) { callback = f; }
-    virtual void setCallback(std::function<void(std::string, float)> f) { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
+    void setCallback(std::function<void(Message)> f) { callback = std::move(f); }
+    void setCallback(std::function<void(std::string, float)> f) override { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
 };
 
 #endif
