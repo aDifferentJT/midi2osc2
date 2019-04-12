@@ -1,0 +1,25 @@
+<html>
+<head>
+</head>
+<body>
+  <button onclick="apply_outputs()">Apply</button><br />
+  <table id="controls">
+    <thead>
+      <tr>
+        <th>Control</th>
+        <th>Value</th>
+        <th>Output</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <script src="app.js"></script>
+  <script>
+    msg_rx("control=test=1=F0");
+    msg_rx("control=test2=output1=F1");
+    msg_rx("control=test=2");
+  </script>
+</body>
+</html>
