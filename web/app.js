@@ -71,6 +71,7 @@ function apply_outputs(){
     if(current != input_out.value){
       //value changed
       tx_output_update(ctlname, input_out.value);
+      outputCell.setAttribute("data-cur", input_out.value);
     }
   }
 }
