@@ -6,7 +6,8 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_compile_options(${TARGET_NAME} -Wall -Wextra -pedantic)
 
-add_executable(midi2osc2 main.cpp mappings.cpp midi.cpp osc.cpp)
+include_directories(websocketpp)
+add_executable(midi2osc2 main.cpp mappings.cpp midi.cpp osc.cpp gui.cpp)
 
 target_link_libraries(midi2osc2 pthread rtmidi)
 
