@@ -19,6 +19,8 @@ function msg_rx(message){
     update_control(parts);
   }else if(parts[0] == "bank"){
     update_status("Bank "+parts[1]);
+  }else if(parts[0]=="echo"){
+    chat_rx(message);
   }
 }
 
@@ -162,4 +164,12 @@ function clear_action(){
 
   cancel_edit_mode();
   return 0;
+}
+
+function chat_rx(full_msg){
+  document.getElementById("chat").innerHTML = full_msg.substring(full_msg.indexOf("echo:"));
+}
+
+function chat_tx(){
+  socket.send("echo:"+document.getElementById("chat-send").value);
 }
