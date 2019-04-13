@@ -1,6 +1,7 @@
 #ifndef Mapping_h
 #define Mapping_h
 
+#include "gui.hpp"
 #include "midi.hpp"
 #include "output.hpp"
 
@@ -23,13 +24,14 @@ class Mappings {
     };
     std::vector<std::string> filenames;
     std::unordered_map<std::string, Output*> outputs;
+    GUI* gui;
     std::vector<Mapping> mappings;
     int currentMappingIndex = 0;
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
   public:
-    Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs);
-    Mappings(std::initializer_list<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs)
-      : Mappings(std::vector(filenames), midi, std::move(outputs)) {}
+    Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs, GUI* gui);
+    Mappings(std::initializer_list<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs, GUI* gui)
+      : Mappings(std::vector(filenames), midi, std::move(outputs), gui) {}
     void write();
 };
 

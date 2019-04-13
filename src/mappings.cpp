@@ -1,15 +1,19 @@
 #include "mappings.hpp"
 #include <iostream>
 
-Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs)
+Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs, GUI* gui)
   : filenames(filenames)
-    , outputs(outputs)
+  , outputs(outputs)
+    , gui(gui)
 {
-  midi->setCallback([this, outputs](Midi::Event event) {
+  midi->setCallback([this](Midi::Event event) {
     try {
       Channel channel = currentMapping().channels.at(event.control);
-      outputs.at(channel.output)->send(channel.path, event.value);
-    } catch (std::out_of_range&) {}
+      this->outputs.at(channel.output)->send(channel.path, event.value);
+      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + channel.output + ":" + channel.path);
+    } catch (std::out_of_range&) {
+      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + "::");
+    }
   });
   for (std::pair<std::string, Output*> output : outputs) {
     output.second->setCallback([this, midi](std::string path, float v) {
@@ -19,6 +23,25 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
       } catch (std::out_of_range&) {}
     });
   }
+  gui->setCallback([this](std::string str) {
+    std::cout << str << std::endl;
+    size_t commandStart = 0;
+    size_t commandEnd = str.find(':', commandStart);
+    std::string command = str.substr(commandStart, commandEnd - commandStart);
+    if (command == "setControl") {
+      size_t controlStart = commandEnd + 1;
+      size_t controlEnd = str.find(':', controlStart);
+      std::string control = str.substr(controlStart, controlEnd - controlStart);
+      size_t outputStart = controlEnd + 1;
+      size_t outputEnd = str.find(':', outputStart);
+      std::string output = str.substr(outputStart, outputEnd - outputStart);
+      size_t pathStart = outputEnd + 1;
+      size_t pathEnd = str.find(':', pathStart);
+      std::string path = str.substr(pathStart, pathEnd - pathStart);
+      this->currentMapping().channels[control] = {output, path};
+      this->currentMapping().feedbacks[path] = control;
+    }
+  });
   std::transform(filenames.begin(), filenames.end(), std::back_inserter(mappings),
                  [](std::string filename) -> Mapping {
                    Mapping mapping;

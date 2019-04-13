@@ -98,7 +98,7 @@ class OSC : public Output {
         float toFloat();
     };
   private:
-    static asio::io_context io_context;
+    asio::io_context& io_context;
 
     const unsigned short sendPort;
     const asio::ip::address address;
@@ -109,8 +109,7 @@ class OSC : public Output {
     udp::socket::endpoint_type recvEndpoint;
     void recvHandler(const asio::error_code& error, size_t count_recv);
   public:
-    static void init();
-    OSC(const std::string& ip, unsigned short sendPort, unsigned short recvPort);
+    OSC(asio::io_context& io_context, const std::string& ip, unsigned short sendPort, unsigned short recvPort);
     void send(Message message);
     void send(std::string addressPattern, float arg) override { send(Message(addressPattern, arg)); }
     template <typename... Args>
