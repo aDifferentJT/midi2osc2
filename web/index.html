@@ -1,20 +1,31 @@
 <html>
 <head>
+  <title>midi2osc</title>
+  <link rel="stylesheet" href="app.css"></link>
 </head>
 <body>
-  <h1>Bank <span id="bank"></span></h1>
+  <h1><span id="status">Disconnected</span></h1>
   <h2>Last Moved Control</h2>
-  <span id="movedcontrol"></span> Value: <span id="movedcontrolvalue"></span> <span id="movedcontrolaction"></span> <span id="movedcontrolchannel"></span> <span id="movedcontroldevice"></span> <span id="movedcontroloutput"></span>
+  <span id="movedcontrol"></span> Value: <span id="movedcontrolvalue"></span> <span id="movedcontrolaction"></span> <span id="movedcontroloutput"></span>
+  <span id="movedcontrolchdevice"></span> <span id="movedcontrolchannel"></span> <span id="movedcontroldevice"></span>
   <br /><br />
-  <button onclick="edit_mode()">Edit Mode</button>
-  <h3>Edit <span id="editcontrol"></span></h3>
-  Output: <input id="edit-device"></input> <input id="edit-output"></input> <button onclick="set_control_output()">Apply</button>  
-
+  <button onclick="edit_mode()">Edit Mode</button><br /><br />
+  <div id="editbox" class="hidden">
+    <button onclick="cancel_edit_mode()">Cancel</button><br />
+    <h3>Edit <span id="editcontrol"></span></h3>
+    <form action="#" onsubmit="set_control_output()">
+      Output: <input id="edit-device"></input> <input id="edit-output"></input> <button type="submit">Apply</button>
+    </form>
+    <form action="#" onsubmit="set_channel()">
+      Channel: <input id="edit-ch-device"></input>
+      <select onchange="channel_selection_changed()" id="edit-ch-sel">
+        <option value="input">Input</option>
+        <option value="aux">Aux</option>
+        <option value="lr">LR</option>
+      </select> <input id="edit-ch-opt" class="show"></input>
+      <button type="submit">Apply</button>
+    </form>
+  </div>
   <script src="app.js"></script>
-  <script>
-    //msg_rx("control=test=1=F0");
-    //msg_rx("control=test2=output1=F1");
-    //msg_rx("control=test=2");
-  </script>
 </body>
 </html>
