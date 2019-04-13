@@ -2,24 +2,18 @@
 <head>
 </head>
 <body>
-  <button onclick="apply_outputs()">Apply</button><br />
-  <table id="controls">
-    <thead>
-      <tr>
-        <th>Control</th>
-        <th>Value</th>
-        <th>Output</th>
-      </tr>
-    </thead>
-    <tbody>
-    </tbody>
-  </table>
+  <h1>Last Moved Control</h1>
+  <span id="movedcontrol"></span> Value: <span id="movedcontrolvalue"></span> <span id="movedcontrolaction"></span> <span id="movedcontrolchannel"></span> <span id="movedcontroldevice"></span> <span id="movedcontroloutput"></span>
+  <br /><br />
+  <button onclick="edit_mode()">Edit Mode</button>
+  <h3>Edit <span id="editcontrol"></span></h3>
+  Output: <input id="edit-device"></input> <input id="edit-output"></input> <button onclick="set_control_output()">Apply</button>  
 
   <script src="app.js"></script>
   <script>
-    msg_rx("control=test=1=F0");
-    msg_rx("control=test2=output1=F1");
-    msg_rx("control=test=2");
+    //msg_rx("control=test=1=F0");
+    //msg_rx("control=test2=output1=F1");
+    //msg_rx("control=test=2");
   </script>
 </body>
 </html>
