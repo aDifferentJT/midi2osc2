@@ -14,13 +14,22 @@
 
 class Mappings {
   private:
-    struct Channel {
+    struct Control {
       std::string output;
       std::string path;
     };
+    struct Channel {
+      std::string output;
+      std::string channel;
+    };
+    struct Action {
+      std::string action;
+    };
     struct Mapping {
       std::string filename;
+      std::unordered_map<std::string, Control> controls;
       std::unordered_map<std::string, Channel> channels;
+      std::unordered_map<std::string, Action> actions;
       std::unordered_map<std::string, std::string> feedbacks;
     };
     std::unordered_map<std::string, Output*> outputs;
