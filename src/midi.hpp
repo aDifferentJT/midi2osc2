@@ -21,26 +21,26 @@ class Midi {
       float value;
     };
   private:
-    struct Control {
+    struct MidiControl {
       enum class Type { Button, Fader };
       Type type = Type::Button;
       uint8_t number = 0;
     };
     struct MidiEvent {
-      Control control;
+      MidiControl control;
       std::variant<bool, uint8_t> value;
       explicit MidiEvent(std::vector<unsigned char> message);
     };
     struct Profile {
       private:
-        std::unordered_map<int, std::string> mapControlToString;
-        std::unordered_map<std::string, int> mapStringToControl;
+        std::unordered_map<int, std::string> mapMidiControlToString;
+        std::unordered_map<std::string, int> mapStringToMidiControl;
         std::unordered_map<std::string, std::string> catchIndicatorMap;
       public:
         explicit Profile(const std::string& filename);
-        std::string stringFromControl(Control c);
-        Control controlFromString(const std::string& str);
-        std::optional<Control> catchIndicator(Control c);
+        std::string stringFromMidiControl(MidiControl c);
+        MidiControl controlFromString(const std::string& str);
+        std::optional<MidiControl> catchIndicator(MidiControl c);
     };
     struct FaderState {
       std::optional<float> moved;

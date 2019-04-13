@@ -7,9 +7,9 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
 {
   midi->setCallback([this](Midi::Event event) {
     try {
-      Channel channel = currentMapping().channels.at(event.control);
-      this->outputs.at(channel.output)->send(channel.path, event.value);
-      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + channel.output + ":" + channel.path);
+      Control control = currentMapping().controls.at(event.control);
+      this->outputs.at(control.output)->send(control.path, event.value);
+      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + control.output + ":" + control.path);
     } catch (std::out_of_range&) {
       this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + "::");
     }
@@ -37,7 +37,7 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
       size_t pathStart = outputEnd + 1;
       size_t pathEnd = str.find(':', pathStart);
       std::string path = str.substr(pathStart, pathEnd - pathStart);
-      this->currentMapping().channels[control] = {output, path};
+      this->currentMapping().controls[control] = {output, path};
       this->currentMapping().feedbacks[path] = control;
     }
     this->write();
@@ -59,7 +59,7 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
                      size_t pathStart = outputEnd + 1;
                      size_t pathEnd = line.find(':', pathStart);
                      std::string path = line.substr(pathStart, pathEnd - pathStart);
-                     mapping.channels[control] = {output, path};
+                     mapping.controls[control] = {output, path};
                      mapping.feedbacks[path] = control;
                    }
                    return mapping;
@@ -69,8 +69,8 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
 void Mappings::write() {
   for (const Mapping& mapping : mappings) {
     std::ofstream f(mapping.filename);
-    for (std::pair<std::string, Channel> channel : mapping.channels) {
-      f << channel.first << ":" << channel.second.output << ":" << channel.second.path << "\n";
+    for (std::pair<std::string, Control> control : mapping.controls) {
+      f << control.first << ":" << control.second.output << ":" << control.second.path << "\n";
     }
     f.close();
   }
