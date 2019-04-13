@@ -3,8 +3,6 @@
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-asio::io_context OSC::io_context;
-
 std::vector<char> OSC::Message::makeTypeTagString(std::vector<Type> types) {
   std::string str = ",";
   for (Type t : types) {
@@ -152,13 +150,6 @@ float OSC::Message::toFloat() {
                     }, arguments[0]);
 }
 
-void OSC::init() {
-  asio::executor_work_guard<asio::io_context::executor_type> work
-    = asio::make_work_guard(io_context);
-  std::thread t([](){ io_context.run(); });
-  t.detach();
-}
-
 using namespace std::placeholders;
 
 void OSC::recvHandler(const asio::error_code& error, size_t count_recv) {
@@ -168,8 +159,9 @@ void OSC::recvHandler(const asio::error_code& error, size_t count_recv) {
   socket.async_receive_from(asio::buffer(recvBuffer), recvEndpoint, std::bind(&OSC::recvHandler, this, _1, _2));
 }
 
-OSC::OSC(const std::string& ip, unsigned short sendPort, unsigned short recvPort)
-  : sendPort(sendPort)
+OSC::OSC(asio::io_context& io_context, const std::string& ip, unsigned short sendPort, unsigned short recvPort)
+  : io_context(io_context)
+  , sendPort(sendPort)
   , address(asio::ip::make_address(ip.c_str()))
   , socket(io_context, udp::endpoint(asio::ip::address(asio::ip::address_v4::any()), recvPort))
     , recvBuffer(1024)
