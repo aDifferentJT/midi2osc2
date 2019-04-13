@@ -59,6 +59,15 @@ function edit_mode(){
   document.getElementById("edit-device").value = document.getElementById("movedcontroldevice").innerHTML;
   document.getElementById("edit-ch-device").value = document.getElementById("movedcontrolchdevice").innerHTML;
   document.getElementById("editcontrol").innerHTML = edit_control_name;
+  document.getElementById("edit-action").value = document.getElementById("movedcontrolaction").innerHTML;
+
+  var chparams = document.getElementById("movedcontrolchannel").innerHTML.split("$");
+  document.getElementById("edit-ch-sel").value = chparams[0];
+  if(chparams.length>1){
+    document.getElementById("edit-ch-opt").value = chparams[1];
+  }
+
+
 
   document.getElementById("editbox").className = "show";
 }
@@ -78,6 +87,8 @@ function set_control_output(){
   }
 
   cancel_edit_mode();
+
+  return 0;
 }
 
 function channel_selection_changed(){
@@ -86,6 +97,7 @@ function channel_selection_changed(){
   if(sel=="input"){
     document.getElementById("edit-ch-opt").className = "show";
   }else{
+    document.getElementById("edit-ch-opt").value = "";
     document.getElementById("edit-ch-opt").className = "hidden";
   }
 }
@@ -96,4 +108,25 @@ function set_channel(){
   var opt = document.getElementById("edit-ch-opt");
 
   socket.send("setChannel:"+edit_control_name+":"+device.value+":"+sel.value+":"+opt.value);
+
+  if(edit_control_name == lastmoved){
+    document.getElementById("movedcontrolchdevice").innerHTML = device.value;
+    document.getElementById("movedcontrolchannel").innerHTML = sel.value+"$"+opt.value;
+  }
+
+  cancel_edit_mode();
+
+  return 0;
+}
+
+function set_action(){
+  var act = document.getElementById("edit-action");
+
+  socket.send("setAction:"+edit_control_name+":"+act.value);
+  if(edit_control_name == lastmoved){
+    document.getElementById("movedcontrolaction").innerHTML = act.value;
+  }
+
+  cancel_edit_mode();
+  return 0;
 }
