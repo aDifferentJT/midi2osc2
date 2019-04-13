@@ -167,7 +167,7 @@ function clear_action(){
 }
 
 function chat_rx(full_msg){
-  document.getElementById("chat").innerHTML = full_msg.substring(full_msg.indexOf("echo:"));
+  document.getElementById("chat").innerHTML = full_msg.substring(full_msg.indexOf("echo:")+5);
 }
 
 function chat_tx(){
