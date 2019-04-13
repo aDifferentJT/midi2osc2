@@ -2,8 +2,7 @@
 #include <iostream>
 
 Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs, GUI* gui)
-  : filenames(filenames)
-  , outputs(outputs)
+  : outputs(outputs)
     , gui(gui)
 {
   midi->setCallback([this](Midi::Event event) {
@@ -41,10 +40,12 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
       this->currentMapping().channels[control] = {output, path};
       this->currentMapping().feedbacks[path] = control;
     }
+    this->write();
   });
   std::transform(filenames.begin(), filenames.end(), std::back_inserter(mappings),
                  [](std::string filename) -> Mapping {
                    Mapping mapping;
+                   mapping.filename = filename;
                    std::ifstream f(filename);
                    while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
                      std::string line;
@@ -66,8 +67,12 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
 }
 
 void Mappings::write() {
-  for (const std::string& filename : filenames) {
-    std::cout << filename << std::endl;
+  for (const Mapping& mapping : mappings) {
+    std::ofstream f(mapping.filename);
+    for (std::pair<std::string, Channel> channel : mapping.channels) {
+      f << channel.first << ":" << channel.second.output << ":" << channel.second.path << "\n";
+    }
+    f.close();
   }
 }
 

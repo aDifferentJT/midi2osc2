@@ -19,10 +19,10 @@ class Mappings {
       std::string path;
     };
     struct Mapping {
+      std::string filename;
       std::unordered_map<std::string, Channel> channels;
       std::unordered_map<std::string, std::string> feedbacks;
     };
-    std::vector<std::string> filenames;
     std::unordered_map<std::string, Output*> outputs;
     GUI* gui;
     std::vector<Mapping> mappings;
