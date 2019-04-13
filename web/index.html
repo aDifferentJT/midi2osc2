@@ -6,15 +6,39 @@
 <body>
   <h1><span id="status">Disconnected</span></h1>
   <h2>Last Moved Control</h2>
-  <span id="movedcontrol"></span> Value: <span id="movedcontrolvalue"></span> <span id="movedcontrolaction"></span> <span id="movedcontroloutput"></span>
-  <span id="movedcontrolchdevice"></span> <span id="movedcontrolchannel"></span> <span id="movedcontroldevice"></span>
+  <table class="table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Value</th>
+        <th>Device</th>
+        <th>Output</th>
+        <th>Ch Device</th>
+        <th>Ch Output</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span id="movedcontrol"></span></td>
+        <td><span id="movedcontrolvalue"></span></td>
+        <td><span id="movedcontroldevice"></span></td>
+        <td><span id="movedcontroloutput"></span></td>
+        <td><span id="movedcontrolchdevice"></span></td>
+        <td><span id="movedcontrolchannel"></span></td>
+        <td><span id="movedcontrolaction"></span></td>
+      </tr>
+    </tbody>
+  </table>
   <br /><br />
   <button onclick="edit_mode()">Edit Mode</button><br /><br />
   <div id="editbox" class="hidden">
     <button onclick="cancel_edit_mode()">Cancel</button><br />
     <h3>Edit <span id="editcontrol"></span></h3>
     <form action="#" onsubmit="set_control_output()">
-      Output: <input id="edit-device"></input> <input id="edit-output"></input> <button type="submit">Apply</button>
+      Output: <input id="edit-device"></input> <input id="edit-output"></input>
+      <button type="submit">Apply</button>
+      <button type="reset" onclick="clear_output()">Clear</button>
     </form>
     <form action="#" onsubmit="set_channel()">
       Channel: <input id="edit-ch-device"></input>
@@ -24,11 +48,13 @@
         <option value="lr">LR</option>
       </select> <input id="edit-ch-opt" class="show"></input>
       <button type="submit">Apply</button>
+      <button type="reset" onclick="clear_channel()">Clear</button>
     </form>
 
     <form action="#" onsubmit="set_action()">
       Action: <input id="edit-action"></input>
       <button type="submit">Apply</button>
+      <button type="reset" onclick="clear_action()">Clear</button>
     </form>
   </div>
   <script src="app.js"></script>

@@ -4,3 +4,18 @@
 
 .show{
 }
+
+.table{
+border-collapse:collapse;
+border:1px solid;
+}
+
+.table td{
+border:1px solid;
+padding: 5px;
+}
+
+.table th{
+border:1px solid;
+padding: 5px;
+}

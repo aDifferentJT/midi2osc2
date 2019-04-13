@@ -91,6 +91,17 @@ function set_control_output(){
   return 0;
 }
 
+function clear_output(){
+  socket.send("setControl:"+edit_control_name+"::");
+  if(edit_control_name == lastmoved){
+    document.getElementById("movedcontroldevice").innerHTML = "";
+    document.getElementById("movedcontroloutput").innerHTML = "";
+  }
+
+  cancel_edit_mode();
+  return 0;
+}
+
 function channel_selection_changed(){
   var sel = document.getElementById("edit-ch-sel").value;
 
@@ -119,12 +130,34 @@ function set_channel(){
   return 0;
 }
 
+function clear_channel(){
+  if(edit_control_name == lastmoved){
+    document.getElementById("movedcontrolchdevice").innerHTML = "";
+    document.getElementById("movedcontrolchannel").innerHTML = "";
+  }
+  socket.send("setChannel:"+edit_control_name+":::");
+
+  cancel_edit_mode();
+
+  return 0;
+}
+
 function set_action(){
   var act = document.getElementById("edit-action");
 
   socket.send("setAction:"+edit_control_name+":"+act.value);
   if(edit_control_name == lastmoved){
     document.getElementById("movedcontrolaction").innerHTML = act.value;
+  }
+
+  cancel_edit_mode();
+  return 0;
+}
+
+function clear_action(){
+  socket.send("setAction:"+edit_control_name+":");
+  if(edit_control_name == lastmoved){
+    document.getElementById("movedcontrolaction").innerHTML = "";
   }
 
   cancel_edit_mode();
