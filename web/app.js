@@ -13,6 +13,8 @@ function msg_rx(message){
 
   if(parts[0]=="moved"){
     update_control(parts);
+  }else if(parts[0] == "bank"){
+    bank_update(parts);
   }
 }
 
@@ -33,6 +35,12 @@ function update_control(parts){
   //ag.innerHTML = parts[4];
 
   lastmoved = parts[1];
+}
+
+function bank_update(parts){
+  var bankLabel =  document.getElementById("bank");
+
+  bankLabel.innerHTML = parts[1];
 }
 
 var edit_control_name = "";
