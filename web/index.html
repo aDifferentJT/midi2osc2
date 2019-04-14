@@ -40,12 +40,12 @@
       <h3>Edit <span id="editcontrol"></span></h3>
       <form action="#" onsubmit="set_control_output()">
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-8">
             Output: <input placeholder="Device" id="edit-device"></input>
             <input id="edit-output" placeholder="Output"></input>
             Inv: <input id="edit-inverted" title="Inverted" type="checkbox"/>
           </div>
-          <div class="col-md-2">
+          <div class="col-3">
             <button type="submit" class="btn btn-primary">Apply</button>
             <button type="reset" onclick="clear_output()" class="btn btn-danger">Clear</button>
           </div>
@@ -54,15 +54,15 @@
       <hr />
       <form action="#" onsubmit="set_channel()">
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-8">
             Channel: <input id="edit-ch-device" placeholder="Channel Device"></input>
             <select onchange="channel_selection_changed()" id="edit-ch-sel">
               <option value="input">Input</option>
               <option value="aux">Aux</option>
               <option value="lr">LR</option>
-            </select> <input id="edit-ch-opt" placeholder="Input Number" style="width: 25%;" class="invisible"></input>
+            </select> <input id="edit-ch-opt" placeholder="Input Number" class="invisible"></input>
           </div>
-          <div class="col-md-4">
+          <div class="col-3">
             <button type="submit" class="btn btn-primary">Apply</button>
             <button type="reset" onclick="clear_channel()" class="btn btn-danger">Clear</button>
           </div>
@@ -71,10 +71,10 @@
       <hr />
       <form action="#" onsubmit="set_action()">
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-8">
             Action: <input id="edit-action"></input>
           </div>
-          <div class="col-md-2">
+          <div class="col-3">
             <button type="submit" class="btn btn-primary">Apply</button>
             <button type="reset" onclick="clear_action()" class="btn btn-danger">Clear</button>
           </div>
