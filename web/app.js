@@ -175,5 +175,7 @@ function chat_rx(full_msg){
 }
 
 function chat_tx(){
-  socket.send("echo:"+document.getElementById("chat-send").value);
+  var txt = document.getElementById("chat-send");
+  socket.send("echo:"+txt.value);
+  txt.value="";
 }
