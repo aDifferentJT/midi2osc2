@@ -173,3 +173,42 @@ void OSC::send(Message message) {
   socket.send_to(asio::buffer(message.toPacket()), udp::endpoint(address, sendPort));
 }
 
+std::pair<std::string, bool> OSC::merge(std::string channel, std::string action) const {
+  size_t channelTypeEnd = channel.find('$');
+  std::string channelType = channel.substr(0, channelTypeEnd);
+  std::string channelArg = channel.substr(channelTypeEnd + 1);
+  std::string path;
+  bool inverted = false;
+  if (channelType == "input") {
+    int num = std::stoi(channelArg);
+    if (action == "gain") {
+      path += "/headamp/";
+    } else {
+      path += "/ch/";
+    }
+    if (num < 10) {
+      path += '0';
+    }
+    path += std::to_string(num);
+  } else if (channelType == "aux") {
+    if (action == "gain") {
+      path += "/headamp/17";
+    } else {
+      path += "/rtn/aux";
+    }
+  } else if (channelType == "lr") {
+    path += "/lr";
+  }
+  if (action == "fader") {
+    path += "/mix/fader";
+  } else if (action == "mute") {
+    path += "/mix/on";
+    inverted = true;
+  } else if (action == "on") {
+    path += "/mix/on";
+  } else if (action == "gain") {
+    path += "/gain";
+  }
+  return std::make_pair(path, inverted);
+}
+

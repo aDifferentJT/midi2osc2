@@ -1,13 +1,13 @@
 #ifndef Mapping_h
 #define Mapping_h
 
+#include "config.hpp"
 #include "gui.hpp"
 #include "midi.hpp"
 #include "output.hpp"
 
 #include <fstream>
 #include <functional>
-//#include <iostream>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -17,6 +17,7 @@ class Mappings {
     struct Control {
       std::string output;
       std::string path;
+      bool inverted;
     };
     struct Channel {
       std::string output;
@@ -32,15 +33,15 @@ class Mappings {
       std::unordered_map<std::string, Action> actions;
       std::unordered_map<std::string, std::string> feedbacks;
     };
-    std::unordered_map<std::string, Output*> outputs;
+    const Config& config;
     GUI* gui;
     std::vector<Mapping> mappings;
-    int currentMappingIndex = 0;
+    size_t currentMappingIndex = 0;
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
   public:
-    Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs, GUI* gui);
-    Mappings(std::initializer_list<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs, GUI* gui)
-      : Mappings(std::vector(filenames), midi, std::move(outputs), gui) {}
+    Mappings(const Config& config, GUI* gui);
+//    Mappings(std::initializer_list<std::string> filenames, Midi* midi, const std::unordered_map<std::string, Output*>& outputs, GUI* gui)
+//      : Mappings(std::vector(filenames), midi, outputs, gui) {}
     void write();
 };
 

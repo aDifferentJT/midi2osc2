@@ -3,16 +3,6 @@
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-/*
-   Midi::Event::Event(std::string control, std::variant<bool, uint8_t> value)
-   : control(control)
-   , value(std::visit(overloaded
-   { [](bool v)    -> float { return v ? 1.0 : 0.0; }
-   , [](uint8_t v) -> float { return (float)v / 127.0; }
-   }, value))
-   {}
-   */
-
 Midi::MidiEvent::MidiEvent(std::vector<unsigned char> message) {
   switch (message[0]) {
     case 0x90:

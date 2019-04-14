@@ -1,28 +1,43 @@
 #include "mappings.hpp"
 #include <iostream>
 
-Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordered_map<std::string, Output*> outputs, GUI* gui)
-  : outputs(outputs)
+Mappings::Mappings(const Config& config, GUI* gui)
+  : config(config)
     , gui(gui)
 {
-  midi->setCallback([this](Midi::Event event) {
-    try {
-      Control control = currentMapping().controls.at(event.control);
-      this->outputs.at(control.output)->send(control.path, event.value);
-      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + control.output + ":" + control.path);
-    } catch (std::out_of_range&) {
-      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + "::");
+  config.midi->setCallback([this](Midi::Event event) {
+    if (event.control == this->config.bankLeft) {
+      if (currentMappingIndex > 0) {
+        currentMappingIndex -= 1;
+        this->gui->send("bank:" + std::to_string(currentMappingIndex));
+      }
+    } else if (event.control == this->config.bankRight) {
+      if (currentMappingIndex < mappings.size() - 1) {
+        currentMappingIndex += 1;
+        this->gui->send("bank:" + std::to_string(currentMappingIndex));
+      }
+    } else {
+      try {
+        Control control = currentMapping().controls.at(event.control);
+        this->config.outputs.at(control.output)->send(control.path, control.inverted ? 1.0 - event.value : event.value);
+        this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + control.output + ":" + control.path + ":" + (control.inverted ? "true" : "false"));
+      } catch (std::out_of_range&) {
+        this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + "::");
+      }
     }
   });
-  for (std::pair<std::string, Output*> output : outputs) {
-    output.second->setCallback([this, midi](std::string path, float v) {
+  for (std::pair<std::string, Output*> output : config.outputs) {
+    output.second->setCallback([this](std::string path, float v) {
       try {
-        std::string control = currentMapping().feedbacks.at(path);
-        midi->feedback(control, v);
+        std::string control = this->currentMapping().feedbacks.at(path);
+        this->config.midi->feedback(control, v);
       } catch (std::out_of_range&) {}
     });
   }
-  gui->setCallback([this](std::string str) {
+  gui->setOpenCallback([this]() {
+    this->gui->send("bank:" + std::to_string(currentMappingIndex));
+  });
+  gui->setRecvCallback([this](std::string str) {
     std::cout << str << std::endl;
     size_t commandStart = 0;
     size_t commandEnd = str.find(':', commandStart);
@@ -37,12 +52,17 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
       size_t pathStart = outputEnd + 1;
       size_t pathEnd = str.find(':', pathStart);
       std::string path = str.substr(pathStart, pathEnd - pathStart);
-      this->currentMapping().controls[control] = {output, path};
+      size_t invertedStart = pathEnd + 1;
+      size_t invertedEnd = str.find(':', invertedStart);
+      bool inverted = str.substr(invertedStart, invertedEnd - invertedStart) == "true";
+      this->currentMapping().controls[control] = {output, path, inverted};
       this->currentMapping().feedbacks[path] = control;
+    } else if (command == "echo") {
+      this->gui->send(str);
     }
     this->write();
   });
-  std::transform(filenames.begin(), filenames.end(), std::back_inserter(mappings),
+  std::transform(config.banks.begin(), config.banks.end(), std::back_inserter(mappings),
                  [](std::string filename) -> Mapping {
                    Mapping mapping;
                    mapping.filename = filename;
@@ -59,7 +79,10 @@ Mappings::Mappings(std::vector<std::string> filenames, Midi* midi, std::unordere
                      size_t pathStart = outputEnd + 1;
                      size_t pathEnd = line.find(':', pathStart);
                      std::string path = line.substr(pathStart, pathEnd - pathStart);
-                     mapping.controls[control] = {output, path};
+                     size_t invertedStart = pathEnd + 1;
+                     size_t invertedEnd = line.find(':', invertedStart);
+                     bool inverted = line.substr(invertedStart, invertedEnd - invertedStart) == "true";
+                     mapping.controls[control] = {output, path, inverted};
                      mapping.feedbacks[path] = control;
                    }
                    return mapping;

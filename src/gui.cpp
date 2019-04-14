@@ -4,6 +4,7 @@ using namespace std::placeholders;
 
 void GUI::openHandler(Connection connection) {
   connections.insert(connection);
+  openCallback();
 }
 
 void GUI::closeHandler(Connection connection) {
@@ -12,7 +13,7 @@ void GUI::closeHandler(Connection connection) {
 
 void GUI::recvHandler(Connection connection, Message message) {
   (void)connection;
-  callback(message->get_payload());
+  recvCallback(message->get_payload());
 }
 
 GUI::GUI(asio::io_context& io_context) {

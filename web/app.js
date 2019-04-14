@@ -29,15 +29,17 @@ var lastmoved ="";
 function update_control(parts){
   var label = document.getElementById("movedcontrol");
   var value = document.getElementById("movedcontrolvalue");
+  var device = document.getElementById("movedcontroldevice");
+  var output = document.getElementById("movedcontroloutput");
+  var inverted = document.getElementById("movedcontrolinverted");
   var cgd =  document.getElementById("movedcontrolchdevice");
   var cg =  document.getElementById("movedcontrolchannel");
   var ag =  document.getElementById("movedcontrolaction");
-  var device = document.getElementById("movedcontroldevice");
-  var output = document.getElementById("movedcontroloutput");
   label.innerHTML = parts[1];
   value.innerHTML = parts[2];
   device.innerHTML = parts[3];
   output.innerHTML = parts[4];
+  inverted.innerHTML = parts[5];
   //cg.innerHTML = parts[3];
   //ag.innerHTML = parts[4];
 
@@ -57,8 +59,9 @@ function edit_mode(){
   var output = document.getElementById("movedcontroloutput");
   var edit_output = document.getElementById("edit-output");
 
-  document.getElementById("edit-output").value = document.getElementById("movedcontroloutput").innerHTML;
   document.getElementById("edit-device").value = document.getElementById("movedcontroldevice").innerHTML;
+  document.getElementById("edit-output").value = document.getElementById("movedcontroloutput").innerHTML;
+  document.getElementById("edit-inverted").checked = document.getElementById("movedcontrolinverted").innerHTML == "true";
   document.getElementById("edit-ch-device").value = document.getElementById("movedcontrolchdevice").innerHTML;
   document.getElementById("editcontrol").innerHTML = edit_control_name;
   document.getElementById("edit-action").value = document.getElementById("movedcontrolaction").innerHTML;
@@ -81,7 +84,8 @@ function cancel_edit_mode(){
 function set_control_output(){
   var device = document.getElementById("edit-device");
   var output = document.getElementById("edit-output");
-  socket.send("setControl:"+edit_control_name+":"+device.value+":"+output.value);
+  var inverted = document.getElementById("edit-inverted");
+  socket.send("setControl:"+edit_control_name+":"+device.value+":"+output.value+":"+inverted.checked);
 
   if(edit_control_name == lastmoved){
     document.getElementById("movedcontroldevice").innerHTML = device.value;

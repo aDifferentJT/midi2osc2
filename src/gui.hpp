@@ -19,7 +19,8 @@ class GUI {
     Server server;
     std::set<Connection,std::owner_less<Connection>> connections;
 
-    std::function<void(std::string)> callback;
+    std::function<void()> openCallback;
+    std::function<void(std::string)> recvCallback;
 
     void openHandler(Connection connection);
     void closeHandler(Connection connection);
@@ -30,7 +31,8 @@ class GUI {
 
     void send(std::string str);
 
-    void setCallback(std::function<void(std::string)> f) { callback = std::move(f); }
+    void setOpenCallback(std::function<void()> f) { openCallback = std::move(f); }
+    void setRecvCallback(std::function<void(std::string)> f) { recvCallback = std::move(f); }
 };
 
 #endif

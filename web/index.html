@@ -13,6 +13,7 @@
         <th>Value</th>
         <th>Device</th>
         <th>Output</th>
+        <th>Inverted</th>
         <th>Ch Device</th>
         <th>Ch Output</th>
         <th>Action</th>
@@ -24,6 +25,7 @@
         <td><span id="movedcontrolvalue"></span></td>
         <td><span id="movedcontroldevice"></span></td>
         <td><span id="movedcontroloutput"></span></td>
+        <td><span id="movedcontrolinverted"></span></td>
         <td><span id="movedcontrolchdevice"></span></td>
         <td><span id="movedcontrolchannel"></span></td>
         <td><span id="movedcontrolaction"></span></td>
@@ -36,7 +38,7 @@
     <button onclick="cancel_edit_mode()">Cancel</button><br />
     <h3>Edit <span id="editcontrol"></span></h3>
     <form action="#" onsubmit="set_control_output()">
-      Output: <input id="edit-device"></input> <input id="edit-output"></input>
+      Output: <input id="edit-device"></input> <input id="edit-output"></input> <input id="edit-inverted" type="checkbox"/>
       <button type="submit">Apply</button>
       <button type="reset" onclick="clear_output()">Clear</button>
     </form>
