@@ -39,7 +39,9 @@ function update_control(parts) {
   var ag =  document.getElementById("movedcontrolaction");
   var ago =  document.getElementById("movedcontrolagoutput");
   label.innerHTML = parts[1];
-  value.innerHTML = parts[2];
+  if(parts[2] != "unchanged"){
+    value.innerHTML = parts[2];
+  }
   device.innerHTML = parts[3];
   output.innerHTML = parts[4];
   inverted.innerHTML = parts[5];
@@ -62,10 +64,15 @@ var edit_control_name = "";
 var edit_channel_name = "";
 var edit_action_name = "";
 
+var in_edit_mode=0;
+
 function edit_mode() {
   edit_control_name = lastmovedcontrol;
   edit_channel_name = lastmovedchannel;
   edit_action_name = lastmovedaction;
+
+  in_edit_mode = 1;
+
   var output = document.getElementById("movedcontroloutput");
   var edit_output = document.getElementById("edit-output");
 
@@ -85,11 +92,14 @@ function edit_mode() {
   document.getElementById("editaction").innerHTML = edit_action_name;
   document.getElementById("edit-action").value = document.getElementById("movedcontrolagoutput").innerHTML;
 
-  document.getElementById("editbox").className = "show";
+  document.getElementById("editbox").className = "visible";
 }
 
 function cancel_edit_mode() {
-  document.getElementById("editbox").className = "hidden";
+  document.getElementById("editbox").className = "invisible";
+  document.getElementById("edit-ch-opt").className = "invisible";
+
+  in_edit_mode = 0;
 }
 
 function set_control_output() {
@@ -120,10 +130,10 @@ function clear_output() {
 function channel_selection_changed() {
   var sel = document.getElementById("edit-cg-sel").value;
   if (sel=="input") {
-    document.getElementById("edit-cg-opt").className = "show";
+    document.getElementById("edit-cg-opt").className = "visible";
   } else {
     document.getElementById("edit-cg-opt").value = "";
-    document.getElementById("edit-cg-opt").className = "hidden";
+    document.getElementById("edit-cg-opt").className = "invisible";
   }
 }
 
@@ -173,6 +183,8 @@ function chat_rx(full_msg) {
   document.getElementById("chat").innerHTML = full_msg.substring(full_msg.indexOf("echo:")+5);
 }
 
-function chat_tx() {
-  socket.send(`echo:${document.getElementById("chat-send").value}`);
+function chat_tx(){
+  var txt = document.getElementById("chat-send");
+  socket.send(`echo:${txt.value}`);
+  txt.value="";
 }
