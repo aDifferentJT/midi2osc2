@@ -35,12 +35,12 @@
       </tbody>
     </table>
     <br /><br />
-    <div id="preeditbox"><button onclick="edit_mode()" class="btn btn-primary">Edit Mode</button><br /><br /></div>
+    <div id="preeditbox"><button onclick="edit_mode()" class="btn btn-primary">Enter Edit Mode</button><br /><br /></div>
     <div id="editbox" class="invisible">
       <h3>Edit <span id="editcontrol"></span></h3>
       <form action="#" onsubmit="set_control_output()">
         <div class="row">
-          <div class="col-md-7">
+          <div class="col-md-6">
             Output: <input placeholder="Device" id="edit-device"></input>
             <input id="edit-output" placeholder="Output"></input>
             Inv: <input id="edit-inverted" title="Inverted" type="checkbox"/>
@@ -54,13 +54,13 @@
       <hr />
       <form action="#" onsubmit="set_channel()">
         <div class="row">
-          <div class="col-md-7">
+          <div class="col-md-6">
             Channel: <input id="edit-ch-device" placeholder="Channel Device"></input>
             <select onchange="channel_selection_changed()" id="edit-ch-sel">
               <option value="input">Input</option>
               <option value="aux">Aux</option>
               <option value="lr">LR</option>
-            </select> <input id="edit-ch-opt" placeholder="Input Number" class="invisible"></input>
+            </select> <input id="edit-ch-opt" placeholder="Input Number" style="width: 25%;" class="invisible"></input>
           </div>
           <div class="col-md-4">
             <button type="submit" class="btn btn-primary">Apply</button>
@@ -71,7 +71,7 @@
       <hr />
       <form action="#" onsubmit="set_action()">
         <div class="row">
-          <div class="col-md-7">
+          <div class="col-md-6">
             Action: <input id="edit-action"></input>
           </div>
           <div class="col-md-2">

@@ -36,7 +36,9 @@ function update_control(parts){
   var cg =  document.getElementById("movedcontrolchannel");
   var ag =  document.getElementById("movedcontrolaction");
   label.innerHTML = parts[1];
-  value.innerHTML = parts[2];
+  if(parts[2] != "unchanged"){
+    value.innerHTML = parts[2];
+  }
   device.innerHTML = parts[3];
   output.innerHTML = parts[4];
   inverted.innerHTML = parts[5];
@@ -54,9 +56,10 @@ function update_status(status){
 }
 
 var edit_control_name = "";
-
+var in_edit_mode=0;
 function edit_mode(){
   edit_control_name = lastmoved;
+  in_edit_mode=1;
   var output = document.getElementById("movedcontroloutput");
   var edit_output = document.getElementById("edit-output");
 
@@ -80,6 +83,7 @@ function edit_mode(){
 function cancel_edit_mode(){
   document.getElementById("editbox").className = "invisible";
   document.getElementById("edit-ch-opt").className = "invisible";
+  in_edit_mode=0;
 }
 
 function set_control_output(){
