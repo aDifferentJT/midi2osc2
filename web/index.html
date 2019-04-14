@@ -7,6 +7,15 @@
   <body>
     <div class="container">
       <h1><span id="status">Disconnected</span></h1>
+      <div class="row">
+        <div class="col-2">
+          <button class="btn btn-secondary" id="bank-left" disabled="" onclick="bank_change('left')">Bank Left</button>
+        </div>
+        <div class="col-2">
+          <button class="btn btn-secondary" id="bank-right" disabled="" onclick="bank_change('right')">Bank Right</button>
+        </div>
+      </div>
+      <hr />
       <h2>Last Moved Control</h2>
       <table class="table">
         <thead>
@@ -39,7 +48,7 @@
         </tbody>
       </table>
       <br/>
-      <div id="preeditbox"><button id="enteredit" onclick="edit_mode()" class="btn btn-primary" disabled>Enter Edit Mode</button><br/><br/></div>
+      <div id="preeditbox"><button id="enteredit" onclick="edit_mode()" class="btn btn-primary" disabled="">Enter Edit Mode</button><br/><br/></div>
       <div id="editbox" class="invisible">
         <hr/>
         <h3>Edit control <span id="editcontrol"/></h3>

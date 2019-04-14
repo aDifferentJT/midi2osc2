@@ -6,6 +6,7 @@ socket.addEventListener('message', function (event) {
 
 socket.onclose = function(event) {
   update_status("Disconnected");
+  disable_controls();
 };
 
 socket.onopen = function(event) {
@@ -17,7 +18,7 @@ function msg_rx(message) {
   if (parts[0] == "moved") {
     update_control(parts);
   } else if (parts[0] == "bank") {
-    update_status(`Bank ${parts[1]}`);
+    update_bank(parts);
   } else if (parts[0] == "devices") {
     update_devices(parts.slice(1));
   } else if (parts[0] == "echo") {
@@ -62,6 +63,23 @@ function update_control(parts) {
 
 function update_status(status) {
   document.getElementById("status").innerHTML = status;
+}
+
+function update_bank(parts){
+  update_status(`Bank ${parts[1]}`);
+  document.getElementById("enteredit").disabled = true;
+}
+
+function disable_controls(){
+  ["bank-left", "bank-right", "enteredit"].forEach(control => {
+    document.getElementById(control).disabled = true;
+  });
+}
+
+function enable_controls(){
+  ["bank-left", "bank-right", "enteredit"].forEach(control => {
+    document.getElementById(control).disabled = false;
+  });
 }
 
 function update_devices(devices) {
@@ -206,4 +224,8 @@ function chat_tx(){
   var txt = document.getElementById("chat-send");
   socket.send(`echo:${txt.value}`);
   txt.value="";
+}
+
+function bank_change(direction){
+  socket.send(`bankChange:${direction}:${lastmovedcontrol}`)
 }

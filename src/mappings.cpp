@@ -146,6 +146,35 @@ Mappings::Mappings(const Config& config, GUI* gui)
       this->currentMapping().actions.erase(action);
     } else if (command == "echo") {
       this->gui->send(str);
+    } else if (command == "bankChange") {
+      size_t directionStart = commandEnd + 1;
+      size_t directionEnd = str.find(':', directionStart);
+      std::string direction = str.substr(directionStart, directionEnd - directionStart);
+
+      size_t controlStart = directionEnd + 1;
+      size_t controlEnd = str.find(':', controlStart);
+      std::string controlName = str.substr(controlStart, controlEnd - controlStart);
+
+      if (direction=="left" && currentMappingIndex > 0){
+        currentMappingIndex -= 1;
+      }else if (direction=="right" && currentMappingIndex < mappings.size() - 1) {
+        currentMappingIndex += 1;
+      }
+      this->gui->send("bank:" + std::to_string(currentMappingIndex));
+      //send the named control data again after the bank switch has been made
+      std::optional<Control> control = getOpt(currentMapping().controls, controlName);
+      std::optional<Channel> channel = getOpt(currentMapping().channels, this->config.channelForControl(controlName));
+      std::optional<Action> action = getOpt(currentMapping().actions, this->config.actionForControl(controlName));
+      this->gui->send
+        ( "moved:" + controlName
+         + ":unchanged"
+         + ":" + bindOptional<std::string, Control>(control, &Control::encode).value_or("::")
+         + ":" + this->config.channelForControl(controlName)
+         + ":" + bindOptional<std::string, Channel>(channel, &Channel::encode).value_or(":")
+         + ":" + this->config.actionForControl(controlName)
+         + ":" + bindOptional<std::string, Action>(action, &Action::encode).value_or("")
+        );
+
     }
     this->write();
   });
@@ -199,4 +228,3 @@ void Mappings::write() {
     f.close();
   }
 }
-
