@@ -31,6 +31,9 @@ class Config {
     std::vector<Group> actionGroups;
 
     Config(asio::io_context& io_context, std::string filename);
+
+    std::string channelForControl(const std::string& control) const;
+    std::string actionForControl(const std::string& control) const;
 };
 
 #endif

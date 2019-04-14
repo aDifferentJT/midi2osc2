@@ -20,6 +20,7 @@ GUI::GUI(asio::io_context& io_context) {
   try {
     server.clear_access_channels(websocketpp::log::alevel::all);
     server.init_asio(&io_context);
+    server.set_reuse_addr(true);
     server.set_open_handler(std::bind(&GUI::openHandler, this, _1));
     server.set_close_handler(std::bind(&GUI::closeHandler, this, _1));
     server.set_message_handler(std::bind(&GUI::recvHandler, this, _1, _2));

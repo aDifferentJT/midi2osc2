@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <functional>
+#include <iostream>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -18,13 +19,22 @@ class Mappings {
       std::string output;
       std::string path;
       bool inverted;
+      Control(std::string str, size_t start = 0);
+      Control() = default;
+      std::string encode() const { return output + ":" + path + ":" + (inverted ? "true" : "false"); }
     };
     struct Channel {
       std::string output;
       std::string channel;
+      Channel(std::string str, size_t start = 0);
+      Channel() = default;
+      std::string encode() const { return output + ":" + channel; }
     };
     struct Action {
       std::string action;
+      Action(std::string str, size_t start = 0);
+      Action() = default;
+      std::string encode() const { return action; }
     };
     struct Mapping {
       std::string filename;

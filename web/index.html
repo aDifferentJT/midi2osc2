@@ -1,7 +1,7 @@
 <html>
 <head>
   <title>midi2osc</title>
-  <link rel="stylesheet" href="app.css"></link>
+  <link rel="stylesheet" href="app.css"/>
 </head>
 <body>
   <h1><span id="status">Disconnected</span></h1>
@@ -14,56 +14,69 @@
         <th>Device</th>
         <th>Output</th>
         <th>Inverted</th>
+        <th>Channel</th>
         <th>Ch Device</th>
         <th>Ch Output</th>
         <th>Action</th>
+        <th>Action Output</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><span id="movedcontrol"></span></td>
-        <td><span id="movedcontrolvalue"></span></td>
-        <td><span id="movedcontroldevice"></span></td>
-        <td><span id="movedcontroloutput"></span></td>
-        <td><span id="movedcontrolinverted"></span></td>
-        <td><span id="movedcontrolchdevice"></span></td>
-        <td><span id="movedcontrolchannel"></span></td>
-        <td><span id="movedcontrolaction"></span></td>
+        <td><span id="movedcontrol"/></td>
+        <td><span id="movedcontrolvalue"/></td>
+        <td><span id="movedcontroldevice"/></td>
+        <td><span id="movedcontroloutput"/></td>
+        <td><span id="movedcontrolinverted"/></td>
+        <td><span id="movedcontrolchannel"/></td>
+        <td><span id="movedcontrolcgdevice"/></td>
+        <td><span id="movedcontrolcgoutput"/></td>
+        <td><span id="movedcontrolaction"/></td>
+        <td><span id="movedcontrolagoutput"/></td>
       </tr>
     </tbody>
   </table>
-  <br /><br />
-  <button onclick="edit_mode()">Edit Mode</button><br /><br />
+  <br/><br/>
+  <button onclick="edit_mode()">Edit Mode</button><br/><br/>
   <div id="editbox" class="hidden">
-    <button onclick="cancel_edit_mode()">Cancel</button><br />
-    <h3>Edit <span id="editcontrol"></span></h3>
+    <button onclick="cancel_edit_mode()">Cancel</button><br/>
+    <h3>Edit control <span id="editcontrol"/></h3>
     <form action="#" onsubmit="set_control_output()">
-      Output: <input id="edit-device"></input> <input id="edit-output"></input> <input id="edit-inverted" type="checkbox"/>
+      <input id="edit-device"/>
+      <input id="edit-output"/>
+      <input id="edit-inverted" type="checkbox"/>
       <button type="submit">Apply</button>
       <button type="reset" onclick="clear_output()">Clear</button>
     </form>
+    <h3>Edit channel <span id="editchannel"/></h3>
     <form action="#" onsubmit="set_channel()">
-      Channel: <input id="edit-ch-device"></input>
-      <select onchange="channel_selection_changed()" id="edit-ch-sel">
+      <input id="edit-cg-device"/>
+      <select onchange="channel_selection_changed()" id="edit-cg-sel">
         <option value="input">Input</option>
         <option value="aux">Aux</option>
         <option value="lr">LR</option>
-      </select> <input id="edit-ch-opt" class="show"></input>
+      </select>
+      <input id="edit-cg-opt" class="show"/>
       <button type="submit">Apply</button>
       <button type="reset" onclick="clear_channel()">Clear</button>
     </form>
-
+    <h3>Edit action <span id="editaction"/></h3>
     <form action="#" onsubmit="set_action()">
-      Action: <input id="edit-action"></input>
+      <select id="edit-action">
+        <option value="fader">Fader</option>
+        <option value="mute">Mute</option>
+        <option value="on">On</option>
+        <option value="gain">Gain</option>
+      </select>
       <button type="submit">Apply</button>
       <button type="reset" onclick="clear_action()">Clear</button>
     </form>
   </div>
-  <br /><br /><br />
+  <br/><br/><br/>
   <div id="chatdiv">
-    <span id="chat"></span>
+    <span id="chat"/>
     <form action="#" onsubmit="chat_tx()">
-      <input id="chat-send"></input>
+      <input id="chat-send"/>
     </form>
   </div>
   <script src="app.js"></script>

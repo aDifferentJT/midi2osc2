@@ -1,3 +1,5 @@
-Fader2:QLC+:/2
-Fader1:QLC+:/1
-Fader3:QLC+:/3
+control:Fader3:QLC+:/3
+control:Fader2:QLC+:/2
+channel:1a:QLC+:input$1
+action::mute
+action:Faders:fader
