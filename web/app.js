@@ -11,6 +11,7 @@ socket.onclose = function(event) {
 
 socket.onopen = function(event) {
   update_status("Connected");
+  enable_bankswitch();
 };
 
 function msg_rx(message) {
@@ -76,8 +77,8 @@ function disable_controls(){
   });
 }
 
-function enable_controls(){
-  ["bank-left", "bank-right", "enteredit"].forEach(control => {
+function enable_bankswitch(){
+  ["bank-left", "bank-right"].forEach(control => {
     document.getElementById(control).disabled = false;
   });
 }
