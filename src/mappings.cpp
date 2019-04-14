@@ -95,6 +95,13 @@ Mappings::Mappings(const Config& config, GUI* gui)
   }
   gui->setOpenCallback([this]() {
     this->gui->send("bank:" + std::to_string(currentMappingIndex));
+
+    if (currentMappingIndex == 0) {
+      this->gui->send("disableBank:left");
+    }else if (currentMappingIndex == mappings.size() - 1) {
+      this->gui->send("disableBank:right");
+    }
+
     std::string devices = "devices";
     for (std::pair<std::string, Output*> output : this->config.outputs) {
       devices += ":" + output.first;
@@ -155,10 +162,18 @@ Mappings::Mappings(const Config& config, GUI* gui)
       size_t controlEnd = str.find(':', controlStart);
       std::string controlName = str.substr(controlStart, controlEnd - controlStart);
 
-      if (direction=="left" && currentMappingIndex > 0){
-        currentMappingIndex -= 1;
-      }else if (direction=="right" && currentMappingIndex < mappings.size() - 1) {
-        currentMappingIndex += 1;
+      if (direction=="left"){
+        if (currentMappingIndex > 0) {
+          currentMappingIndex -= 1;
+        } else {
+          this->gui->send("disableBank:left");
+        }
+      }else if (direction=="right") {
+        if (currentMappingIndex < mappings.size() - 1) {
+          currentMappingIndex += 1;
+        } else {
+          this->gui->send("disableBank:right");
+        }
       }
       this->gui->send("bank:" + std::to_string(currentMappingIndex));
       //send the named control data again after the bank switch has been made

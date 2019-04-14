@@ -24,6 +24,8 @@ function msg_rx(message) {
     update_devices(parts.slice(1));
   } else if (parts[0] == "echo") {
     chat_rx(message);
+  } else if (parts[0] == "disableBank"){
+    disable_bank(parts);
   }
 }
 
@@ -229,4 +231,14 @@ function chat_tx(){
 
 function bank_change(direction){
   socket.send(`bankChange:${direction}:${lastmovedcontrol}`)
+}
+
+function disable_bank(parts){
+  if(parts[1] == "left"){
+    document.getElementById("bank-left").disabled = true;
+    document.getElementById("bank-right").disabled = false;
+  }else if(parts[1]=="right"){
+    document.getElementById("bank-right").disabled = true;
+    document.getElementById("bank-left").disabled = false;
+  }
 }
