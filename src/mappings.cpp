@@ -95,6 +95,11 @@ Mappings::Mappings(const Config& config, GUI* gui)
   }
   gui->setOpenCallback([this]() {
     this->gui->send("bank:" + std::to_string(currentMappingIndex));
+    std::string devices = "devices";
+    for (std::pair<std::string, Output*> output : this->config.outputs) {
+      devices += ":" + output.first;
+    }
+    this->gui->send(devices);
   });
   gui->setRecvCallback([this](std::string str) {
     std::cout << str << std::endl;

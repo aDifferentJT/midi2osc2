@@ -18,6 +18,8 @@ function msg_rx(message) {
     update_control(parts);
   } else if (parts[0] == "bank") {
     update_status(`Bank ${parts[1]}`);
+  } else if (parts[0] == "devices") {
+    update_devices(parts.slice(1));
   } else if (parts[0] == "echo") {
     chat_rx(message);
   }
@@ -60,6 +62,21 @@ function update_control(parts) {
 
 function update_status(status) {
   document.getElementById("status").innerHTML = status;
+}
+
+function update_devices(devices) {
+  ["edit-device", "edit-cg-device"].forEach( fieldId => {
+    var field = document.getElementById(fieldId);
+    while (field.options.length > 0) {
+      field.options.remove(0);
+    }
+    devices.forEach( device => {
+      var element = document.createElement("option")
+      element.value = device;
+      element.innerHTML = device;
+      field.options.add(element);
+    });
+  });
 }
 
 var edit_control_name = "";

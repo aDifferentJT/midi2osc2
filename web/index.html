@@ -46,7 +46,7 @@
         <form action="#" onsubmit="set_control_output()">
           <div class="row">
             <div class="col-8">
-              <input placeholder="Device" id="edit-device"/>
+              <select placeholder="Device" id="edit-device"></select>
               <input id="edit-output" placeholder="Output"/>
               Inv: <input id="edit-inverted" title="Inverted" type="checkbox"/>
             </div>
@@ -61,7 +61,7 @@
         <form action="#" onsubmit="set_channel()">
           <div class="row">
             <div class="col-8">
-              <input id="edit-cg-device" placeholder="Channel Device"/>
+              <select id="edit-cg-device" placeholder="Channel Device"></select>
               <select onchange="channel_selection_changed()" id="edit-cg-sel">
                 <option value="input">Input</option>
                 <option value="aux">Aux</option>
