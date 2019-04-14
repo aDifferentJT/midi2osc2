@@ -39,13 +39,13 @@
         </tbody>
       </table>
       <br/><br/>
-      <div id="preeditbox"><button onclick="edit_mode()" class="btn btn-primary">Enter Edit Mode</button><br/><br/></div>
+      <div id="preeditbox"><button id="enteredit" onclick="edit_mode()" class="btn btn-primary" disabled>Enter Edit Mode</button><br/><br/></div>
       <div id="editbox" class="invisible">
         <h3>Edit control <span id="editcontrol"/></h3>
         <form action="#" onsubmit="set_control_output()">
           <div class="row">
             <div class="col-8">
-              Output: <input placeholder="Device" id="edit-device"/>
+              <input placeholder="Device" id="edit-device"/>
               <input id="edit-output" placeholder="Output"/>
               Inv: <input id="edit-inverted" title="Inverted" type="checkbox"/>
             </div>
@@ -60,7 +60,7 @@
         <form action="#" onsubmit="set_channel()">
           <div class="row">
             <div class="col-8">
-              Channel: <input id="edit-cg-device" placeholder="Channel Device"/>
+              <input id="edit-cg-device" placeholder="Channel Device"/>
               <select onchange="channel_selection_changed()" id="edit-cg-sel">
                 <option value="input">Input</option>
                 <option value="aux">Aux</option>
@@ -79,7 +79,6 @@
         <form action="#" onsubmit="set_action()">
           <div class="row">
             <div class="col-8">
-              Action:
               <select id="edit-action">
                 <option value="fader">Fader</option>
                 <option value="mute">Mute</option>

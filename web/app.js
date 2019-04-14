@@ -54,6 +54,8 @@ function update_control(parts) {
   lastmovedcontrol = parts[1];
   lastmovedchannel = parts[6];
   lastmovedaction = parts[9];
+
+  document.getElementById("enteredit").disabled = false;
 }
 
 function update_status(status) {
