@@ -40,8 +40,9 @@ function update_control(parts){
   device.innerHTML = parts[3];
   output.innerHTML = parts[4];
   inverted.innerHTML = parts[5];
-  //cg.innerHTML = parts[3];
-  //ag.innerHTML = parts[4];
+  //cgd.innerHTML = parts[6]
+  //cg.innerHTML = parts[7];
+  //ag.innerHTML = parts[8];
 
   lastmoved = parts[1];
 }
@@ -73,12 +74,12 @@ function edit_mode(){
   }
 
 
-
-  document.getElementById("editbox").className = "show";
+  document.getElementById("editbox").className = "visible";
 }
 
 function cancel_edit_mode(){
-  document.getElementById("editbox").className = "hidden";
+  document.getElementById("editbox").className = "invisible";
+  document.getElementById("edit-ch-opt").className = "invisible";
 }
 
 function set_control_output(){
@@ -112,10 +113,10 @@ function channel_selection_changed(){
   var sel = document.getElementById("edit-ch-sel").value;
 
   if(sel=="input"){
-    document.getElementById("edit-ch-opt").className = "show";
+    document.getElementById("edit-ch-opt").className = "";
   }else{
     document.getElementById("edit-ch-opt").value = "";
-    document.getElementById("edit-ch-opt").className = "hidden";
+    document.getElementById("edit-ch-opt").className = "invisible";
   }
 }
 

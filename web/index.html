@@ -1,70 +1,95 @@
 <html>
 <head>
   <title>midi2osc</title>
-  <link rel="stylesheet" href="app.css"></link>
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="bootstrap.min.css" />
 </head>
 <body>
-  <h1><span id="status">Disconnected</span></h1>
-  <h2>Last Moved Control</h2>
-  <table class="table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>Value</th>
-        <th>Device</th>
-        <th>Output</th>
-        <th>Inverted</th>
-        <th>Ch Device</th>
-        <th>Ch Output</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span id="movedcontrol"></span></td>
-        <td><span id="movedcontrolvalue"></span></td>
-        <td><span id="movedcontroldevice"></span></td>
-        <td><span id="movedcontroloutput"></span></td>
-        <td><span id="movedcontrolinverted"></span></td>
-        <td><span id="movedcontrolchdevice"></span></td>
-        <td><span id="movedcontrolchannel"></span></td>
-        <td><span id="movedcontrolaction"></span></td>
-      </tr>
-    </tbody>
-  </table>
-  <br /><br />
-  <button onclick="edit_mode()">Edit Mode</button><br /><br />
-  <div id="editbox" class="hidden">
-    <button onclick="cancel_edit_mode()">Cancel</button><br />
-    <h3>Edit <span id="editcontrol"></span></h3>
-    <form action="#" onsubmit="set_control_output()">
-      Output: <input id="edit-device"></input> <input id="edit-output"></input> <input id="edit-inverted" type="checkbox"/>
-      <button type="submit">Apply</button>
-      <button type="reset" onclick="clear_output()">Clear</button>
-    </form>
-    <form action="#" onsubmit="set_channel()">
-      Channel: <input id="edit-ch-device"></input>
-      <select onchange="channel_selection_changed()" id="edit-ch-sel">
-        <option value="input">Input</option>
-        <option value="aux">Aux</option>
-        <option value="lr">LR</option>
-      </select> <input id="edit-ch-opt" class="hidden"></input>
-      <button type="submit">Apply</button>
-      <button type="reset" onclick="clear_channel()">Clear</button>
-    </form>
-
-    <form action="#" onsubmit="set_action()">
-      Action: <input id="edit-action"></input>
-      <button type="submit">Apply</button>
-      <button type="reset" onclick="clear_action()">Clear</button>
-    </form>
-  </div>
-  <br /><br /><br />
-  <div id="chatdiv" class="pullbottom hidden">
-    <span id="chat"></span>
-    <form action="#" onsubmit="chat_tx()">
-      <input id="chat-send"></input>
-    </form>
+  <div class="container">
+    <h1><span id="status">Disconnected</span></h1>
+    <h2>Last Moved Control</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Value</th>
+          <th>Device</th>
+          <th>Output</th>
+          <th>Inverted</th>
+          <th>Ch Device</th>
+          <th>Ch Output</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span id="movedcontrol"></span></td>
+          <td><span id="movedcontrolvalue"></span></td>
+          <td><span id="movedcontroldevice"></span></td>
+          <td><span id="movedcontroloutput"></span></td>
+          <td><span id="movedcontrolinverted"></span></td>
+          <td><span id="movedcontrolchdevice"></span></td>
+          <td><span id="movedcontrolchannel"></span></td>
+          <td><span id="movedcontrolaction"></span></td>
+        </tr>
+      </tbody>
+    </table>
+    <br /><br />
+    <div id="preeditbox"><button onclick="edit_mode()" class="btn btn-primary">Edit Mode</button><br /><br /></div>
+    <div id="editbox" class="invisible">
+      <h3>Edit <span id="editcontrol"></span></h3>
+      <form action="#" onsubmit="set_control_output()">
+        <div class="row">
+          <div class="col-md-7">
+            Output: <input placeholder="Device" id="edit-device"></input>
+            <input id="edit-output" placeholder="Output"></input>
+            Inv: <input id="edit-inverted" title="Inverted" type="checkbox"/>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <button type="reset" onclick="clear_output()" class="btn btn-danger">Clear</button>
+          </div>
+        </div>
+      </form>
+      <hr />
+      <form action="#" onsubmit="set_channel()">
+        <div class="row">
+          <div class="col-md-7">
+            Channel: <input id="edit-ch-device" placeholder="Channel Device"></input>
+            <select onchange="channel_selection_changed()" id="edit-ch-sel">
+              <option value="input">Input</option>
+              <option value="aux">Aux</option>
+              <option value="lr">LR</option>
+            </select> <input id="edit-ch-opt" placeholder="Input Number" class="invisible"></input>
+          </div>
+          <div class="col-md-4">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <button type="reset" onclick="clear_channel()" class="btn btn-danger">Clear</button>
+          </div>
+        </div>
+      </form>
+      <hr />
+      <form action="#" onsubmit="set_action()">
+        <div class="row">
+          <div class="col-md-7">
+            Action: <input id="edit-action"></input>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <button type="reset" onclick="clear_action()" class="btn btn-danger">Clear</button>
+          </div>
+        </div>
+      </form>
+      <br />
+      <button onclick="cancel_edit_mode()" class="btn btn-warning">Cancel Edit Mode</button>
+    </div>
+    <br /><br /><br />
+    <div id="chatdiv" class="pullbottom invisible">
+      <span id="chat"></span>
+      <form action="#" onsubmit="chat_tx()">
+        <input id="chat-send"></input>
+      </form>
+    </div>
   </div>
   <script src="app.js"></script>
 </body>
