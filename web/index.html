@@ -7,6 +7,14 @@
   <body>
     <div class="container">
       <h1><span id="status">Disconnected</span></h1>
+      <div id="cnn-form" class="">
+        <h1>Connection Information</h1>
+        <form action="#" onsubmit="connect(document.getElementById('cnn-hostname').value); return false;">
+          Server Hostname: <input id="cnn-hostname" />
+          <button type="submit" class="btn btn-success">Connect</button>
+        </form>
+        <hr />
+      </div>
       <div class="row">
         <div class="col-2">
           <button class="btn btn-secondary" id="bank-left" disabled="" onclick="bank_change('left')">Bank Left</button>
@@ -49,7 +57,7 @@
       </table>
       <br/>
       <div id="preeditbox"><button id="enteredit" onclick="edit_mode()" class="btn btn-primary" disabled="">Enter Edit Mode</button><br/><br/></div>
-      <div id="editbox" class="invisible">
+      <div id="editbox" class="hidden">
         <hr/>
         <h3>Edit control <span id="editcontrol"/></h3>
         <form action="#" onsubmit="set_control_output()">
@@ -76,7 +84,7 @@
                 <option value="aux">Aux</option>
                 <option value="lr">LR</option>
               </select>
-              <input id="edit-cg-opt" placeholder="Input Number" class="invisible"/>
+              <input id="edit-cg-opt" placeholder="Input Number" class="hidden"/>
             </div>
             <div class="col-3">
               <button type="submit" class="btn btn-primary">Apply</button>
@@ -105,7 +113,7 @@
         <br/>
         <button onclick="cancel_edit_mode()" class="btn btn-warning">Cancel Edit Mode</button>
         <br/><br/><br/>
-        <div id="chatdiv" class="pullbottom invisible">
+        <div id="chatdiv" class="pullbottom hidden">
           <span id="chat"></span>
           <form action="#" onsubmit="chat_tx()">
             <input id="chat-send"></input>
@@ -113,5 +121,8 @@
         </div>
       </div>
       <script src="app.js"></script>
+      <script>
+      initial_load();
+      </script>
   </body>
 </html>
