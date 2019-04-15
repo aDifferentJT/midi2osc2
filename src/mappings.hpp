@@ -2,7 +2,6 @@
 #define Mapping_h
 
 #include <fstream>        // for size_t
-#include <memory>         // for shared_ptr
 #include <optional>       // for optional, nullopt
 #include <set>            // for set
 #include <stdexcept>      // for out_of_range
@@ -11,7 +10,6 @@
 #include <utility>        // for move
 #include <vector>         // for vector
 #include "config.hpp"     // for Config
-class GUI;
 
 class Mappings {
   private:
@@ -109,14 +107,13 @@ class Mappings {
         }
     };
     const Config& config;
-    std::shared_ptr<GUI> gui;
     std::vector<Mapping> mappings;
     std::size_t currentMappingIndex = 0;
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
 
     void refreshBank();
   public:
-    Mappings(const Config& config, const std::shared_ptr<GUI>& gui);
+    Mappings(const Config& config);
     void write() {
       for (const Mapping& mapping : mappings) {
         mapping.write();

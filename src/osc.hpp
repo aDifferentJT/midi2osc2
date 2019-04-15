@@ -22,7 +22,7 @@
 
 using asio::ip::udp;
 
-class OSC : public Output {
+class OSC final : public Output {
   public:
     struct Message {
       public:

@@ -112,17 +112,26 @@
         </form>
         <br/>
         <button onclick="cancel_edit_mode()" class="btn btn-warning">Cancel Edit Mode</button>
-        <br/><br/><br/>
-        <div id="chatdiv" class="pullbottom hidden">
-          <span id="chat"></span>
-          <form action="#" onsubmit="chat_tx()">
-            <input id="chat-send"></input>
-          </form>
-        </div>
+      </div>
+      <br/><br/><br/>
+      <div id="mock-div" class="pullbottom hidden">
+        <h2>Mock Controls</h2>
+        <form action="#" onsubmit="mock_moved()">
+          <input id="mock-moved-control"></input>
+          <input id="mock-moved-value"></input>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+        <span id="mock-led"></span>
+      </div>
+      <div id="chatdiv" class="pullbottom hidden">
+        <span id="chat"></span>
+        <form action="#" onsubmit="chat_tx()">
+          <input id="chat-send"></input>
+        </form>
       </div>
       <script src="app.js"></script>
       <script>
-      initial_load();
+        initial_load();
       </script>
   </body>
 </html>

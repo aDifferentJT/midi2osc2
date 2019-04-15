@@ -47,6 +47,12 @@ function msg_rx(message) {
     enable_bank(parts[1], true);
   } else if (parts[0] == "disableBank") {
     enable_bank(parts[1], false);
+  } else if (parts[0] == "mock") {
+    enable_mock();
+  } else if (parts[0] == "mockSetLed") {
+    mock_set_led(parts[1], parts[2]);
+  } else {
+    console.log(`Unrecognised command: ${message}`);
   }
 }
 
@@ -244,20 +250,37 @@ function chat_rx(full_msg) {
   document.getElementById("chat").innerHTML = full_msg.substring(full_msg.indexOf("echo:")+5);
 }
 
-function chat_tx(){
+function chat_tx() {
   var txt = document.getElementById("chat-send");
   socket.send(`echo:${txt.value}`);
   txt.value="";
 }
 
-function bank_change(direction){
+function bank_change(direction) {
   socket.send(`bankChange:${direction}:${lastmovedcontrol}`)
 }
 
-function enable_bank(bank, value){
+function enable_bank(bank, value) {
   if (bank == "left") {
     document.getElementById("bank-left").disabled = !value;
   } else if (bank == "right") {
     document.getElementById("bank-right").disabled = !value;
   }
 }
+
+function enable_mock() {
+  document.getElementById("mock-div").className = "show";
+  console.log("Shown mock");
+}
+
+function mock_moved() {
+  console.log("moved");
+  control = document.getElementById("mock-moved-control").value;
+  value = document.getElementById("mock-moved-value").value;
+  socket.send(`mockMoved:${control}:${value}`);
+}
+
+function mock_set_led(control, value) {
+  document.getElementById("mock-led").innerHTML = `LED ${control}: ${value}`;
+}
+

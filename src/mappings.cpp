@@ -96,24 +96,23 @@ std::string Mappings::Mapping::encodedMappingOf(const std::string& controlName) 
 }
 
 void Mappings::refreshBank() {
-  this->config.midi->setLed(this->config.bankLeft, currentMappingIndex > 0);
-  this->config.midi->setLed(this->config.bankRight, currentMappingIndex < mappings.size() - 1);
-  this->gui->send("bank:" + std::to_string(currentMappingIndex));
+  config.midi->setLed(config.bankLeft, currentMappingIndex > 0);
+  config.midi->setLed(config.bankRight, currentMappingIndex < mappings.size() - 1);
+  config.gui->send("bank:" + std::to_string(currentMappingIndex));
   if (currentMappingIndex > 0) {
-    this->gui->send("enableBank:left");
+    config.gui->send("enableBank:left");
   } else {
-    this->gui->send("disableBank:left");
+    config.gui->send("disableBank:left");
   }
   if (currentMappingIndex < mappings.size() - 1) {
-    this->gui->send("enableBank:right");
+    config.gui->send("enableBank:right");
   } else {
-    this->gui->send("disableBank:right");
+    config.gui->send("disableBank:right");
   }
 }
 
-Mappings::Mappings(const Config& config, const std::shared_ptr<GUI>& gui)
+Mappings::Mappings(const Config& config)
   : config(config)
-    , gui(gui)
 {
   refreshBank();
   config.midi->setCallback([this](Midi::Event event) {
@@ -132,7 +131,7 @@ Mappings::Mappings(const Config& config, const std::shared_ptr<GUI>& gui)
       if (control) {
         this->config.outputs.at(control->output)->send(control->path, control->inverted ? 1.0 - event.value : event.value);
       }
-      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + currentMapping().encodedMappingOf(event.control));
+      this->config.gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + currentMapping().encodedMappingOf(event.control));
     }
   });
   for (auto& output : config.outputs) {
@@ -143,17 +142,19 @@ Mappings::Mappings(const Config& config, const std::shared_ptr<GUI>& gui)
       }
     });
   }
-  gui->setOpenCallback([this]() {
+  config.gui->setOpenCallback([this]() {
     refreshBank();
 
     std::string devices = "devices";
     for (auto& output : this->config.outputs) {
       devices += ":" + output.first;
     }
-    this->gui->send(devices);
+    this->config.gui->send(devices);
+    if (this->config.midi->isMock) {
+      this->config.gui->send("mock");
+    }
   });
-  gui->setRecvCallback([this](std::string str) {
-    std::cout << str << std::endl;
+  config.gui->setRecvCallback([this](std::string str) {
     std::size_t commandStart = 0;
     std::size_t commandEnd = str.find(':', commandStart);
     std::string command = str.substr(commandStart, commandEnd - commandStart);
@@ -194,7 +195,7 @@ Mappings::Mappings(const Config& config, const std::shared_ptr<GUI>& gui)
       this->currentMapping().removeAction(action);
       currentMapping().addFeedbackForAction(action);
     } else if (command == "echo") {
-      this->gui->send(str);
+      this->config.gui->send(str);
     } else if (command == "bankChange") {
       std::size_t directionStart = commandEnd + 1;
       std::size_t directionEnd = str.find(':', directionStart);
@@ -216,8 +217,18 @@ Mappings::Mappings(const Config& config, const std::shared_ptr<GUI>& gui)
       refreshBank();
       if (!controlName.empty()) {
         //send the named control data again after the bank switch has been made
-        this->gui->send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
+        this->config.gui->send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
       }
+    } else if (command == "mockMoved") {
+      std::size_t controlStart = commandEnd + 1;
+      std::size_t controlEnd = str.find(':', controlStart);
+      std::string control = str.substr(controlStart, controlEnd - controlStart);
+      std::size_t valueStart = controlEnd + 1;
+      std::size_t valueEnd = str.find(':', valueStart);
+      float value = std::stof(str.substr(valueStart, valueEnd - valueStart));
+      this->config.midi->recvMockMoved({control, value});
+    } else {
+      std::cerr << "Unknown gui command line: " << str << std::endl;
     }
     this->write();
   });

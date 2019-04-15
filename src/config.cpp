@@ -1,15 +1,21 @@
 #include "config.hpp"
-#include <fstream>     // for size_t, ifstream, basic_istream::peek
+#include <fstream>     // for size_t, ifstream, operator<<, basic_ostream, endl
+#include <iostream>    // for cerr
+#include "gui.hpp"     // for GUI
 #include "midi.hpp"    // for Midi
 #include "osc.hpp"     // for OSC
 #include "output.hpp"  // for Output
 namespace asio { class io_context; }
+#include <fstream> // IWYU pragma: keep
 
-Config::Config(asio::io_context& io_context, const std::string& filename) {
+Config::Config(asio::io_context& io_context, const std::string& filename) : gui(std::make_shared<GUI>(io_context)) {
   std::ifstream f(filename);
   while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
     std::string str;
     std::getline(f, str);
+    if (str.empty() || str.substr(0, 2) == "//") {
+      continue;
+    }
     std::size_t typeEnd = str.find(':');
     std::string type = str.substr(0, typeEnd);
     if (type == "osc") {
@@ -69,6 +75,8 @@ Config::Config(asio::io_context& io_context, const std::string& filename) {
         controls.insert(str.substr(controlStart, controlEnd - controlStart));
       } while (controlEnd != std::string::npos);
       actionGroups.emplace_back(name, controls);
+    } else {
+      std::cerr << "Cannot parse line: " << str << std::endl;
     }
   }
 }

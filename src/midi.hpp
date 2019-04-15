@@ -1,5 +1,5 @@
-#ifndef MIDI_h
-#define MIDI_h
+#ifndef Midi_h
+#define Midi_h
 
 #include <bits/stdint-uintn.h>  // for uint8_t
 #include <rtmidi/RtMidi.h>      // for RtMidiIn, RtMidiOut
@@ -10,7 +10,6 @@
 #include <utility>              // for move
 #include <variant>              // for variant
 #include <vector>               // for vector
-
 class Config;
 
 class Midi {
@@ -45,6 +44,7 @@ class Midi {
       std::optional<float> moved;
       std::optional<float> received;
     };
+
     RtMidiIn rtMidiIn;
     RtMidiOut rtMidiOut;
     unsigned int portNumber;
@@ -57,11 +57,15 @@ class Midi {
 
     void setLed(uint8_t number, bool value);
   public:
+    const bool isMock;
+
     Midi(const std::string& deviceName, const std::string& profileFilename, const Config& config);
     void feedback(const std::string& controlS, float v);
     void setCallback(std::function<void(Event)> f) { callback = std::move(f); }
 
     void setLed(const std::string& control, bool value) { setLed(profile.controlFromString(control).number, value); }
+
+    void recvMockMoved(Event e) { if (!isMock) { throw; } callback(std::move(e)); }
 };
 
 #endif

@@ -9,6 +9,7 @@
 #include <utility>        // for move
 #include <vector>         // for vector<>::const_iterator, vector
 #include "output.hpp" // IWYU pragma: keep
+class GUI;
 class Midi;
 namespace asio { class io_context; }
 
@@ -19,6 +20,7 @@ class Config {
       std::set<std::string> controls;
       Group(std::string name, std::set<std::string> controls) : name(std::move(name)), controls(std::move(controls)) {}
     };
+    std::shared_ptr<GUI> gui;
     std::unordered_map<std::string, std::unique_ptr<Output>> outputs;
     std::shared_ptr<Midi> midi;
     std::vector<std::string> banks;

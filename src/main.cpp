@@ -9,7 +9,6 @@
 #include <iostream>                      // for operator<<, endl, basic_ostream
 #include <memory>                        // for allocator, make_shared
 #include "config.hpp"                    // for Config
-#include "gui.hpp"                       // for GUI
 #include "mappings.hpp"                  // for Mappings
 
 asio::io_context io_context;
@@ -27,9 +26,7 @@ int main(int argc, char* argv[]) {
 
   Config config(io_context, argv[1]);
 
-  auto gui = std::make_shared<GUI>(io_context);
-
-  Mappings mappings(config, gui);
+  Mappings mappings(config);
 
   std::signal(SIGINT, &stop);
 
