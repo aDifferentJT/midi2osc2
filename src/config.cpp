@@ -31,7 +31,7 @@ Config::Config(asio::io_context& io_context, std::string filename) {
       size_t profileStart = nameEnd + 1;
       size_t profileEnd = str.find(':', profileStart);
       std::string profile = str.substr(profileStart, profileEnd - profileStart);
-      midi = new Midi(name, profile);
+      midi = new Midi(name, profile, *this);
     } else if (type == "bank") {
       banks.push_back(str.substr(typeEnd + 1));
     } else if (type == "bankLeft") {

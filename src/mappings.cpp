@@ -39,19 +39,27 @@ Mappings::Action::Action(std::string str, size_t start) {
   action = str.substr(actionStart, actionEnd - actionStart);
 }
 
+void Mappings::refreshBankLeds() {
+  this->config.midi->setLed(this->config.bankLeft, currentMappingIndex > 0);
+  this->config.midi->setLed(this->config.bankRight, currentMappingIndex < mappings.size() - 1);
+}
+
 Mappings::Mappings(const Config& config, GUI* gui)
   : config(config)
     , gui(gui)
 {
+  refreshBankLeds();
   config.midi->setCallback([this](Midi::Event event) {
     if (event.control == this->config.bankLeft) {
       if (currentMappingIndex > 0) {
         currentMappingIndex -= 1;
+        refreshBankLeds();
         this->gui->send("bank:" + std::to_string(currentMappingIndex));
       }
     } else if (event.control == this->config.bankRight) {
       if (currentMappingIndex < mappings.size() - 1) {
         currentMappingIndex += 1;
+        refreshBankLeds();
         this->gui->send("bank:" + std::to_string(currentMappingIndex));
       }
     } else {
@@ -117,7 +125,7 @@ Mappings::Mappings(const Config& config, GUI* gui)
       size_t controlEnd = str.find(':', controlStart);
       std::string control = str.substr(controlStart, controlEnd - controlStart);
       try {
-      this->currentMapping().feedbacks.erase(this->currentMapping().controls.at(control).path);
+        this->currentMapping().feedbacks.erase(this->currentMapping().controls.at(control).path);
       } catch (std::out_of_range&) {}
       this->currentMapping().controls.erase(control);
     } else if (command == "setChannel") {

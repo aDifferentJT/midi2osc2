@@ -14,6 +14,8 @@
 #include <variant>
 #include <vector>
 
+class Config;
+
 class Midi {
   public:
     struct Event {
@@ -54,11 +56,15 @@ class Midi {
     std::unordered_map<uint8_t, FaderState> faderStates;
     Profile profile;
 
+    const Config& config;
+
     void setLed(uint8_t number, bool value);
   public:
-    Midi(const std::string& deviceName, const std::string& profileFilename);
+    Midi(const std::string& deviceName, const std::string& profileFilename, const Config& config);
     void feedback(const std::string& controlS, float v);
     void setCallback(std::function<void(Event)> f) { callback = std::move(f); }
+
+    void setLed(std::string control, bool value) { setLed(profile.controlFromString(control).number, value); }
 };
 
 #endif

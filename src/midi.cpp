@@ -1,4 +1,5 @@
 #include "midi.hpp"
+#include "config.hpp"
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
@@ -88,10 +89,11 @@ bool inBounds(T a, T b, T c) {
   return (a <= b && b <= c) || (a >= b && b >= c);
 }
 
-Midi::Midi(const std::string& deviceName, const std::string& profileFilename)
+Midi::Midi(const std::string& deviceName, const std::string& profileFilename, const Config& config)
   : rtMidiIn(RtMidi::UNSPECIFIED, "midi2osc2")
   , rtMidiOut(RtMidi::UNSPECIFIED, "midi2osc2")
-    , profile(profileFilename)
+  , profile(profileFilename)
+    , config(config)
 {
   portNumber = -1;
   for (unsigned int i = 0; i < rtMidiIn.getPortCount(); i++) {
@@ -115,15 +117,19 @@ Midi::Midi(const std::string& deviceName, const std::string& profileFilename)
     float value;
     switch (event.control.type) {
       case MidiControl::Type::Button:
-        if (std::get<bool>(event.value)) {
-          try {
-            midi->buttonStates[event.control.number] = !midi->buttonStates.at(event.control.number);
-          } catch (std::out_of_range&) {
-            midi->buttonStates[event.control.number] = true;
+        if (control == midi->config.bankLeft || control == midi->config.bankRight) {
+          value = std::get<bool>(event.value) ? 1.0 : 0.0;
+        } else {
+          if (std::get<bool>(event.value)) {
+            try {
+              midi->buttonStates[event.control.number] = !midi->buttonStates.at(event.control.number);
+            } catch (std::out_of_range&) {
+              midi->buttonStates[event.control.number] = true;
+            }
           }
+          value = midi->buttonStates[event.control.number] ? 1.0 : 0.0;
+          midi->setLed(event.control.number, value >= 0.5);
         }
-        value = midi->buttonStates[event.control.number] ? 1.0 : 0.0;
-        midi->setLed(event.control.number, midi->buttonStates[event.control.number]);
         midi->callback({control, value});
         break;
       case MidiControl::Type::Fader:

@@ -48,6 +48,8 @@ class Mappings {
     std::vector<Mapping> mappings;
     size_t currentMappingIndex = 0;
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
+
+    void refreshBankLeds();
   public:
     Mappings(const Config& config, GUI* gui);
 //    Mappings(std::initializer_list<std::string> filenames, Midi* midi, const std::unordered_map<std::string, Output*>& outputs, GUI* gui)
