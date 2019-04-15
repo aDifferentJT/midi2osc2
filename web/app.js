@@ -11,7 +11,6 @@ socket.onclose = function(event) {
 
 socket.onopen = function(event) {
   update_status("Connected");
-  enable_bankswitch();
 };
 
 function msg_rx(message) {
@@ -24,8 +23,10 @@ function msg_rx(message) {
     update_devices(parts.slice(1));
   } else if (parts[0] == "echo") {
     chat_rx(message);
-  } else if (parts[0] == "disableBank"){
-    disable_bank(parts);
+  } else if (parts[0] == "enableBank") {
+    enable_bank(parts[1], true);
+  } else if (parts[0] == "disableBank") {
+    enable_bank(parts[1], false);
   }
 }
 
@@ -233,12 +234,10 @@ function bank_change(direction){
   socket.send(`bankChange:${direction}:${lastmovedcontrol}`)
 }
 
-function disable_bank(parts){
-  if(parts[1] == "left"){
-    document.getElementById("bank-left").disabled = true;
-    document.getElementById("bank-right").disabled = false;
-  }else if(parts[1]=="right"){
-    document.getElementById("bank-right").disabled = true;
-    document.getElementById("bank-left").disabled = false;
+function enable_bank(bank, value){
+  if (bank == "left") {
+    document.getElementById("bank-left").disabled = !value;
+  } else if (bank == "right") {
+    document.getElementById("bank-right").disabled = !value;
   }
 }

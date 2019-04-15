@@ -39,28 +39,37 @@ Mappings::Action::Action(std::string str, size_t start) {
   action = str.substr(actionStart, actionEnd - actionStart);
 }
 
-void Mappings::refreshBankLeds() {
+void Mappings::refreshBank() {
   this->config.midi->setLed(this->config.bankLeft, currentMappingIndex > 0);
   this->config.midi->setLed(this->config.bankRight, currentMappingIndex < mappings.size() - 1);
+  this->gui->send("bank:" + std::to_string(currentMappingIndex));
+  if (currentMappingIndex > 0) {
+    this->gui->send("enableBank:left");
+  } else {
+    this->gui->send("disableBank:left");
+  }
+  if (currentMappingIndex < mappings.size() - 1) {
+    this->gui->send("enableBank:right");
+  } else {
+    this->gui->send("disableBank:right");
+  }
 }
 
 Mappings::Mappings(const Config& config, GUI* gui)
   : config(config)
     , gui(gui)
 {
-  refreshBankLeds();
+  refreshBank();
   config.midi->setCallback([this](Midi::Event event) {
     if (event.control == this->config.bankLeft) {
       if (currentMappingIndex > 0) {
         currentMappingIndex -= 1;
-        refreshBankLeds();
-        this->gui->send("bank:" + std::to_string(currentMappingIndex));
+        refreshBank();
       }
     } else if (event.control == this->config.bankRight) {
       if (currentMappingIndex < mappings.size() - 1) {
         currentMappingIndex += 1;
-        refreshBankLeds();
-        this->gui->send("bank:" + std::to_string(currentMappingIndex));
+        refreshBank();
       }
     } else {
       try {
@@ -102,13 +111,7 @@ Mappings::Mappings(const Config& config, GUI* gui)
     });
   }
   gui->setOpenCallback([this]() {
-    this->gui->send("bank:" + std::to_string(currentMappingIndex));
-
-    if (currentMappingIndex == 0) {
-      this->gui->send("disableBank:left");
-    }else if (currentMappingIndex == mappings.size() - 1) {
-      this->gui->send("disableBank:right");
-    }
+    refreshBank();
 
     std::string devices = "devices";
     for (std::pair<std::string, Output*> output : this->config.outputs) {
@@ -170,34 +173,31 @@ Mappings::Mappings(const Config& config, GUI* gui)
       size_t controlEnd = str.find(':', controlStart);
       std::string controlName = str.substr(controlStart, controlEnd - controlStart);
 
-      if (direction=="left"){
+      if (direction=="left") {
         if (currentMappingIndex > 0) {
           currentMappingIndex -= 1;
-        } else {
-          this->gui->send("disableBank:left");
         }
-      }else if (direction=="right") {
+      } else if (direction=="right") {
         if (currentMappingIndex < mappings.size() - 1) {
           currentMappingIndex += 1;
-        } else {
-          this->gui->send("disableBank:right");
         }
       }
-      this->gui->send("bank:" + std::to_string(currentMappingIndex));
-      //send the named control data again after the bank switch has been made
-      std::optional<Control> control = getOpt(currentMapping().controls, controlName);
-      std::optional<Channel> channel = getOpt(currentMapping().channels, this->config.channelForControl(controlName));
-      std::optional<Action> action = getOpt(currentMapping().actions, this->config.actionForControl(controlName));
-      this->gui->send
-        ( "moved:" + controlName
-         + ":unchanged"
-         + ":" + bindOptional<std::string, Control>(control, &Control::encode).value_or("::")
-         + ":" + this->config.channelForControl(controlName)
-         + ":" + bindOptional<std::string, Channel>(channel, &Channel::encode).value_or(":")
-         + ":" + this->config.actionForControl(controlName)
-         + ":" + bindOptional<std::string, Action>(action, &Action::encode).value_or("")
-        );
-
+      refreshBank();
+      if (controlName != "") {
+        //send the named control data again after the bank switch has been made
+        std::optional<Control> control = getOpt(currentMapping().controls, controlName);
+        std::optional<Channel> channel = getOpt(currentMapping().channels, this->config.channelForControl(controlName));
+        std::optional<Action> action = getOpt(currentMapping().actions, this->config.actionForControl(controlName));
+        this->gui->send
+          ( "moved:" + controlName
+           + ":unchanged"
+           + ":" + bindOptional<std::string, Control>(control, &Control::encode).value_or("::")
+           + ":" + this->config.channelForControl(controlName)
+           + ":" + bindOptional<std::string, Channel>(channel, &Channel::encode).value_or(":")
+           + ":" + this->config.actionForControl(controlName)
+           + ":" + bindOptional<std::string, Action>(action, &Action::encode).value_or("")
+          );
+      }
     }
     this->write();
   });
