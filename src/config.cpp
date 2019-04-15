@@ -68,11 +68,3 @@ Config::Config(asio::io_context& io_context, std::string filename) {
   }
 }
 
-std::string Config::channelForControl(const std::string& control) const {
-  return (*std::find_if(channelGroups.begin(), channelGroups.end(), [control](Group g) { return g.controls.count(control) > 0; })).name;
-}
-
-std::string Config::actionForControl(const std::string& control) const {
-  return (*std::find_if(actionGroups.begin(), actionGroups.end(), [control](Group g) { return g.controls.count(control) > 0; })).name;
-}
-

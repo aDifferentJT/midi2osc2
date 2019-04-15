@@ -81,7 +81,7 @@ std::vector<char> OSC::Message::makeArguments(std::vector<Argument> arg) {
 OSC::Message::Message(std::vector<char> packet) {
   auto addressPatternEnd = std::find(packet.begin(), packet.end(), '\0');
   addressPattern = std::string(packet.begin(), addressPatternEnd);
-  size_t addressPatternPad = 3 - ((addressPatternEnd - packet.begin() + 3) % 4);
+  size_t addressPatternPad = 4 - ((addressPatternEnd - packet.begin()) % 4);
   auto typeTagStringBegin = addressPatternEnd + addressPatternPad;
   if (*typeTagStringBegin != ',') {
     std::cerr << "Missing Type Tag String" << std::endl;

@@ -9,39 +9,72 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <unordered_map>
 #include <string>
 #include <vector>
 
 class Mappings {
   private:
-    struct Control {
+    struct ControlOutput {
       std::string output;
       std::string path;
       bool inverted;
-      Control(std::string str, size_t start = 0);
-      Control() = default;
+      ControlOutput(std::string str, size_t start = 0);
+      ControlOutput() = default;
+      ControlOutput(std::string output, std::string path, bool inverted) : output(output), path(path), inverted(inverted) {}
       std::string encode() const { return output + ":" + path + ":" + (inverted ? "true" : "false"); }
     };
-    struct Channel {
+    struct ChannelOutput {
       std::string output;
       std::string channel;
-      Channel(std::string str, size_t start = 0);
-      Channel() = default;
+      ChannelOutput(std::string str, size_t start = 0);
+      ChannelOutput() = default;
+      ChannelOutput(std::string output, std::string channel) : output(output), channel(channel) {}
       std::string encode() const { return output + ":" + channel; }
     };
-    struct Action {
+    struct ActionOutput {
       std::string action;
-      Action(std::string str, size_t start = 0);
-      Action() = default;
+      ActionOutput(std::string str, size_t start = 0);
+      ActionOutput() = default;
+      ActionOutput(std::string action) : action(action) {}
       std::string encode() const { return action; }
     };
     struct Mapping {
-      std::string filename;
-      std::unordered_map<std::string, Control> controls;
-      std::unordered_map<std::string, Channel> channels;
-      std::unordered_map<std::string, Action> actions;
-      std::unordered_map<std::string, std::string> feedbacks;
+      private:
+        const Config& config;
+      public:
+        const std::string filename;
+        std::unordered_map<std::string, ControlOutput> controls;
+        std::unordered_map<std::string, ChannelOutput> channels;
+        std::unordered_map<std::string, ActionOutput> actions;
+        std::unordered_map<std::string, std::string> feedbacks;
+        Mapping(const Config& config, std::string filename) : config(config), filename(filename) {}
+
+        void write() const;
+
+        std::optional<ControlOutput> outputFromString(std::string str);
+
+        void addFeedback(std::string control) {
+          std::optional<ControlOutput> output = outputFromString(control);
+          if (output) {
+          feedbacks[output->path] = control;
+          }
+        }
+      private:
+        template <typename T>
+          void addFeedback(T controls) {
+            for (std::string control : controls) {
+              addFeedback(control);
+            }
+          }
+      public:
+        void addFeedbackForChannel(std::string channel) {
+          addFeedback(config.controlsForChannel(channel));
+        }
+        void addFeedbackForAction(std::string action) {
+          addFeedback(config.controlsForAction(action));
+        }
     };
     const Config& config;
     GUI* gui;
@@ -52,9 +85,11 @@ class Mappings {
     void refreshBank();
   public:
     Mappings(const Config& config, GUI* gui);
-//    Mappings(std::initializer_list<std::string> filenames, Midi* midi, const std::unordered_map<std::string, Output*>& outputs, GUI* gui)
-//      : Mappings(std::vector(filenames), midi, outputs, gui) {}
-    void write();
+    void write() {
+      for (const Mapping& mapping : mappings) {
+        mapping.write();
+      }
+    }
 };
 
 #endif
