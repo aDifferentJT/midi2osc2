@@ -200,7 +200,7 @@ function channel_selection_changed() {
     document.getElementById("edit-cg-opt").className = "show";
   } else {
     document.getElementById("edit-cg-opt").value = "";
-    document.getElementById("edit-cg-opt").className = "show";
+    document.getElementById("edit-cg-opt").className = "hidden";
   }
 }
 
