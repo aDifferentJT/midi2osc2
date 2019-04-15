@@ -153,7 +153,7 @@ function edit_mode() {
   document.getElementById("editaction").innerHTML = edit_action_name;
   document.getElementById("edit-action").value = document.getElementById("movedcontrolagoutput").innerHTML;
 
-  document.getElementById("editbox").className = "visible";
+  document.getElementById("editbox").className = "show";
 }
 
 function cancel_edit_mode() {
@@ -191,10 +191,10 @@ function clear_output() {
 function channel_selection_changed() {
   var sel = document.getElementById("edit-cg-sel").value;
   if (sel=="input") {
-    document.getElementById("edit-cg-opt").className = "visible";
+    document.getElementById("edit-cg-opt").className = "show";
   } else {
     document.getElementById("edit-cg-opt").value = "";
-    document.getElementById("edit-cg-opt").className = "hidden";
+    document.getElementById("edit-cg-opt").className = "show";
   }
 }
 
