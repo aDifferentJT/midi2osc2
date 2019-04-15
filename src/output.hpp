@@ -12,10 +12,10 @@ class Output {
     Output(Output&&) = delete;
     Output& operator=(Output&&) = delete;
     virtual ~Output() = default;
-    virtual void send(std::string addressPattern) = 0;
-    virtual void send(std::string addressPattern, float v) = 0;
-    virtual void setCallback(std::function<void(std::string, float)> f) = 0;
-    virtual std::pair<std::string, bool> merge(std::string channel, std::string action) const = 0;
+    virtual void send(const std::string& addressPattern) = 0;
+    virtual void send(const std::string& addressPattern, float v) = 0;
+    virtual void setCallback(std::function<void(const std::string&, float)> f) = 0;
+    virtual std::pair<std::string, bool> merge(const std::string& channel, const std::string& action) const = 0;
 };
 
 #endif

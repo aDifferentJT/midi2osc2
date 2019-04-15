@@ -169,7 +169,7 @@ void OSC::send(Message message) {
   socket.send_to(asio::buffer(message.toPacket()), udp::endpoint(address, sendPort));
 }
 
-std::pair<std::string, bool> OSC::merge(std::string channel, std::string action) const {
+std::pair<std::string, bool> OSC::merge(const std::string& channel, const std::string& action) const {
   std::size_t channelTypeEnd = channel.find('$');
   std::string channelType = channel.substr(0, channelTypeEnd);
   std::string channelArg = channel.substr(channelTypeEnd + 1);

@@ -114,13 +114,13 @@ class OSC final : public Output {
   public:
     OSC(asio::io_context& io_context, const std::string& ip, unsigned short sendPort, unsigned short recvPort);
     void send(Message message);
-    void send(std::string addressPattern) override { send(Message(addressPattern)); }
-    void send(std::string addressPattern, float arg) override { send(Message(addressPattern, arg)); }
+    void send(const std::string& addressPattern) override { send(Message(addressPattern)); }
+    void send(const std::string& addressPattern, float arg) override { send(Message(addressPattern, arg)); }
     template <typename... Args>
-      void send(std::string addressPattern, Args... args) { send(Message(addressPattern, args...)); }
+      void send(const std::string& addressPattern, Args... args) { send(Message(addressPattern, args...)); }
     void setCallback(std::function<void(Message)> f) { callback = std::move(f); }
-    void setCallback(std::function<void(std::string, float)> f) override { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
-    std::pair<std::string, bool> merge(std::string channel, std::string action) const override;
+    void setCallback(std::function<void(const std::string&, float)> f) override { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
+    std::pair<std::string, bool> merge(const std::string& channel, const std::string& action) const override;
 };
 
 #endif

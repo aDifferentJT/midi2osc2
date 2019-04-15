@@ -10,6 +10,7 @@
 #include <utility>        // for move
 #include <vector>         // for vector
 #include "config.hpp"     // for Config
+#include "midi.hpp"       // for Midi::Event, Midi
 
 class Mappings {
   private:
@@ -88,7 +89,7 @@ class Mappings {
         void addFeedback(const std::string& control) {
           std::optional<ControlOutput> output = outputFromString(control);
           if (output) {
-          feedbacks[output->path] = control;
+            feedbacks[output->path] = control;
           }
         }
       private:
@@ -112,6 +113,11 @@ class Mappings {
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
 
     void refreshBank();
+
+    void midiCallback(Midi::Event event);
+    void outputCallback(const std::string& path, float v);
+    void guiOpenCallback();
+    void guiRecvCallback(const std::string& str);
   public:
     Mappings(const Config& config);
     void write() {

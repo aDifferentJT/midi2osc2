@@ -4,7 +4,6 @@
 #include <iterator>    // for back_insert_iterator, back_inserter
 #include <memory>      // for shared_ptr, __shared_ptr_access, unique_ptr
 #include "gui.hpp"     // for GUI
-#include "midi.hpp"    // for Midi::Event, Midi
 #include "output.hpp"  // for Output
 #include "utils.hpp"   // for bindOptional, getOpt
 
@@ -111,127 +110,135 @@ void Mappings::refreshBank() {
   }
 }
 
+void Mappings::midiCallback(Midi::Event event) {
+  if (event.control == config.bankLeft) {
+    if (currentMappingIndex > 0) {
+      currentMappingIndex -= 1;
+      refreshBank();
+    }
+  } else if (event.control == config.bankRight) {
+    if (currentMappingIndex < mappings.size() - 1) {
+      currentMappingIndex += 1;
+      refreshBank();
+    }
+  } else {
+    std::optional<ControlOutput> control = currentMapping().outputFromString(event.control);
+    if (control) {
+      config.outputs.at(control->output)->send(control->path, control->inverted ? 1.0 - event.value : event.value);
+    }
+    config.gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + currentMapping().encodedMappingOf(event.control));
+  }
+}
+
+void Mappings::outputCallback(const std::string& path, float v) {
+  std::optional<std::string> control = currentMapping().feedbackFor(path);
+  if (control) {
+    config.midi->feedback(*control, v);
+  }
+}
+
+void Mappings::guiOpenCallback() {
+  refreshBank();
+
+  std::string devices = "devices";
+  for (auto& output : config.outputs) {
+    devices += ":" + output.first;
+  }
+  config.gui->send(devices);
+  if (config.midi->isMock) {
+    config.gui->send("mock");
+  }
+}
+
+void Mappings::guiRecvCallback(const std::string& str) {
+  std::size_t commandStart = 0;
+  std::size_t commandEnd = str.find(':', commandStart);
+  std::string command = str.substr(commandStart, commandEnd - commandStart);
+  if (command == "setControl") {
+    std::size_t controlStart = commandEnd + 1;
+    std::size_t controlEnd = str.find(':', controlStart);
+    std::string control = str.substr(controlStart, controlEnd - controlStart);
+    currentMapping().addControl(control, ControlOutput(str, controlEnd + 1));
+    currentMapping().addFeedback(control);
+  } else if (command == "clearControl") {
+    std::size_t controlStart = commandEnd + 1;
+    std::size_t controlEnd = str.find(':', controlStart);
+    std::string control = str.substr(controlStart, controlEnd - controlStart);
+    currentMapping().removeControl(control);
+    currentMapping().addFeedback(control);
+  } else if (command == "setChannel") {
+    std::size_t channelStart = commandEnd + 1;
+    std::size_t channelEnd = str.find(':', channelStart);
+    std::string channel = str.substr(channelStart, channelEnd - channelStart);
+    currentMapping().addChannel(channel, ChannelOutput(str, channelEnd + 1));
+    currentMapping().addFeedbackForChannel(channel);
+  } else if (command == "clearChannel") {
+    std::size_t channelStart = commandEnd + 1;
+    std::size_t channelEnd = str.find(':', channelStart);
+    std::string channel = str.substr(channelStart, channelEnd - channelStart);
+    currentMapping().removeChannel(channel);
+    currentMapping().addFeedbackForChannel(channel);
+  } else if (command == "setAction") {
+    std::size_t actionStart = commandEnd + 1;
+    std::size_t actionEnd = str.find(':', actionStart);
+    std::string action = str.substr(actionStart, actionEnd - actionStart);
+    currentMapping().addAction(action, ActionOutput(str, actionEnd + 1));
+    currentMapping().addFeedbackForAction(action);
+  } else if (command == "clearAction") {
+    std::size_t actionStart = commandEnd + 1;
+    std::size_t actionEnd = str.find(':', actionStart);
+    std::string action = str.substr(actionStart, actionEnd - actionStart);
+    currentMapping().removeAction(action);
+    currentMapping().addFeedbackForAction(action);
+  } else if (command == "echo") {
+    config.gui->send(str);
+  } else if (command == "bankChange") {
+    std::size_t directionStart = commandEnd + 1;
+    std::size_t directionEnd = str.find(':', directionStart);
+    std::string direction = str.substr(directionStart, directionEnd - directionStart);
+
+    std::size_t controlStart = directionEnd + 1;
+    std::size_t controlEnd = str.find(':', controlStart);
+    std::string controlName = str.substr(controlStart, controlEnd - controlStart);
+
+    if (direction=="left") {
+      if (currentMappingIndex > 0) {
+        currentMappingIndex -= 1;
+      }
+    } else if (direction=="right") {
+      if (currentMappingIndex < mappings.size() - 1) {
+        currentMappingIndex += 1;
+      }
+    }
+    refreshBank();
+    if (!controlName.empty()) {
+      //send the named control data again after the bank switch has been made
+      config.gui->send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
+    }
+  } else if (command == "mockMoved") {
+    std::size_t controlStart = commandEnd + 1;
+    std::size_t controlEnd = str.find(':', controlStart);
+    std::string control = str.substr(controlStart, controlEnd - controlStart);
+    std::size_t valueStart = controlEnd + 1;
+    std::size_t valueEnd = str.find(':', valueStart);
+    float value = std::stof(str.substr(valueStart, valueEnd - valueStart));
+    config.midi->recvMockMoved({control, value});
+  } else {
+    std::cerr << "Unknown gui command line: " << str << std::endl;
+  }
+  write();
+}
+
 Mappings::Mappings(const Config& config)
   : config(config)
 {
   refreshBank();
-  config.midi->setCallback([this](Midi::Event event) {
-    if (event.control == this->config.bankLeft) {
-      if (currentMappingIndex > 0) {
-        currentMappingIndex -= 1;
-        refreshBank();
-      }
-    } else if (event.control == this->config.bankRight) {
-      if (currentMappingIndex < mappings.size() - 1) {
-        currentMappingIndex += 1;
-        refreshBank();
-      }
-    } else {
-      std::optional<ControlOutput> control = currentMapping().outputFromString(event.control);
-      if (control) {
-        this->config.outputs.at(control->output)->send(control->path, control->inverted ? 1.0 - event.value : event.value);
-      }
-      this->config.gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + currentMapping().encodedMappingOf(event.control));
-    }
-  });
+  config.midi->setCallback(bindMember(&Mappings::midiCallback, this));
   for (auto& output : config.outputs) {
-    output.second->setCallback([this](std::string path, float v) {
-      std::optional<std::string> control = this->currentMapping().feedbackFor(path);
-      if (control) {
-        this->config.midi->feedback(*control, v);
-      }
-    });
+    output.second->setCallback(bindMember(&Mappings::outputCallback, this));
   }
-  config.gui->setOpenCallback([this]() {
-    refreshBank();
-
-    std::string devices = "devices";
-    for (auto& output : this->config.outputs) {
-      devices += ":" + output.first;
-    }
-    this->config.gui->send(devices);
-    if (this->config.midi->isMock) {
-      this->config.gui->send("mock");
-    }
-  });
-  config.gui->setRecvCallback([this](std::string str) {
-    std::size_t commandStart = 0;
-    std::size_t commandEnd = str.find(':', commandStart);
-    std::string command = str.substr(commandStart, commandEnd - commandStart);
-    if (command == "setControl") {
-      std::size_t controlStart = commandEnd + 1;
-      std::size_t controlEnd = str.find(':', controlStart);
-      std::string control = str.substr(controlStart, controlEnd - controlStart);
-      this->currentMapping().addControl(control, ControlOutput(str, controlEnd + 1));
-      currentMapping().addFeedback(control);
-    } else if (command == "clearControl") {
-      std::size_t controlStart = commandEnd + 1;
-      std::size_t controlEnd = str.find(':', controlStart);
-      std::string control = str.substr(controlStart, controlEnd - controlStart);
-      this->currentMapping().removeControl(control);
-      currentMapping().addFeedback(control);
-    } else if (command == "setChannel") {
-      std::size_t channelStart = commandEnd + 1;
-      std::size_t channelEnd = str.find(':', channelStart);
-      std::string channel = str.substr(channelStart, channelEnd - channelStart);
-      this->currentMapping().addChannel(channel, ChannelOutput(str, channelEnd + 1));
-      currentMapping().addFeedbackForChannel(channel);
-    } else if (command == "clearChannel") {
-      std::size_t channelStart = commandEnd + 1;
-      std::size_t channelEnd = str.find(':', channelStart);
-      std::string channel = str.substr(channelStart, channelEnd - channelStart);
-      this->currentMapping().removeChannel(channel);
-      currentMapping().addFeedbackForChannel(channel);
-    } else if (command == "setAction") {
-      std::size_t actionStart = commandEnd + 1;
-      std::size_t actionEnd = str.find(':', actionStart);
-      std::string action = str.substr(actionStart, actionEnd - actionStart);
-      this->currentMapping().addAction(action, ActionOutput(str, actionEnd + 1));
-      currentMapping().addFeedbackForAction(action);
-    } else if (command == "clearAction") {
-      std::size_t actionStart = commandEnd + 1;
-      std::size_t actionEnd = str.find(':', actionStart);
-      std::string action = str.substr(actionStart, actionEnd - actionStart);
-      this->currentMapping().removeAction(action);
-      currentMapping().addFeedbackForAction(action);
-    } else if (command == "echo") {
-      this->config.gui->send(str);
-    } else if (command == "bankChange") {
-      std::size_t directionStart = commandEnd + 1;
-      std::size_t directionEnd = str.find(':', directionStart);
-      std::string direction = str.substr(directionStart, directionEnd - directionStart);
-
-      std::size_t controlStart = directionEnd + 1;
-      std::size_t controlEnd = str.find(':', controlStart);
-      std::string controlName = str.substr(controlStart, controlEnd - controlStart);
-
-      if (direction=="left") {
-        if (currentMappingIndex > 0) {
-          currentMappingIndex -= 1;
-        }
-      } else if (direction=="right") {
-        if (currentMappingIndex < mappings.size() - 1) {
-          currentMappingIndex += 1;
-        }
-      }
-      refreshBank();
-      if (!controlName.empty()) {
-        //send the named control data again after the bank switch has been made
-        this->config.gui->send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
-      }
-    } else if (command == "mockMoved") {
-      std::size_t controlStart = commandEnd + 1;
-      std::size_t controlEnd = str.find(':', controlStart);
-      std::string control = str.substr(controlStart, controlEnd - controlStart);
-      std::size_t valueStart = controlEnd + 1;
-      std::size_t valueEnd = str.find(':', valueStart);
-      float value = std::stof(str.substr(valueStart, valueEnd - valueStart));
-      this->config.midi->recvMockMoved({control, value});
-    } else {
-      std::cerr << "Unknown gui command line: " << str << std::endl;
-    }
-    this->write();
-  });
+  config.gui->setOpenCallback(bindMember(&Mappings::guiOpenCallback, this));
+  config.gui->setRecvCallback(bindMember(&Mappings::guiRecvCallback, this));
   std::transform(config.banks.begin(), config.banks.end(), std::back_inserter(mappings),
                  [this](std::string filename) -> Mapping {
                    Mapping mapping(this->config, filename);
