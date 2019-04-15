@@ -1,6 +1,13 @@
 #include "gui.hpp"
-
-using namespace std::placeholders;
+#include <iostream>                                // for operator<<, endl
+#include "utils.hpp"                               // for bindMember
+#include "websocketpp/close.hpp"                   // for going_away
+#include "websocketpp/error.hpp"                   // for exception
+#include "websocketpp/frame.hpp"                   // for text
+#include "websocketpp/impl/endpoint_impl.hpp"      // for endpoint::close
+#include "websocketpp/logger/levels.hpp"           // for alevel, alevel::all
+#include "websocketpp/message_buffer/message.hpp"  // for message
+namespace asio { class io_context; }
 
 void GUI::openHandler(const Connection& connection) {
   connections.insert(connection);

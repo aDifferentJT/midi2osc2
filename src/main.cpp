@@ -1,12 +1,16 @@
-#include "mappings.hpp"
-#include "midi.hpp"
-#include "osc.hpp"
-#include "output.hpp"
-#include "config.hpp"
+#define ASIO_STANDALONE
+#include <asio.hpp> // IWYU pragma: keep
+// IWYU pragma: no_include <asio/executor_work_guard.hpp>
+// IWYU pragma: no_include <asio/impl/io_context.hpp>
+// IWYU pragma: no_include <asio/impl/io_context.ipp>
+// IWYU pragma: no_include <asio/io_context.hpp>
 
-#include <cassert>
-#include <csignal>
-#include <memory>
+#include <csignal>                       // for signal, SIGINT
+#include <iostream>                      // for operator<<, endl, basic_ostream
+#include <memory>                        // for allocator, make_shared
+#include "config.hpp"                    // for Config
+#include "gui.hpp"                       // for GUI
+#include "mappings.hpp"                  // for Mappings
 
 asio::io_context io_context;
 

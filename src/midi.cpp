@@ -1,5 +1,11 @@
 #include "midi.hpp"
-#include "config.hpp"
+#include <algorithm>   // for mismatch
+#include <cmath>       // for fabsf
+#include <cstdint>     // for uint8_t
+#include <iostream>    // for cerr
+#include <stdexcept>   // for out_of_range
+#include "config.hpp"  // for Config
+#include <fstream> // IWYU pragma: keep
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
@@ -54,7 +60,7 @@ Midi::Profile::Profile(const std::string& filename) {
     if (f.get() != ':') { throw; }
     std::string str;
     std::getline(f, str);
-    size_t catchIndicatorInd = str.find(':');
+    std::size_t catchIndicatorInd = str.find(':');
     std::string name = str.substr(0, catchIndicatorInd);
     mapMidiControlToString[cEnc] = name;
     mapStringToMidiControl[name] = cEnc;
@@ -65,11 +71,11 @@ Midi::Profile::Profile(const std::string& filename) {
 }
 
 std::string Midi::Profile::stringFromMidiControl(MidiControl c) {
-  return mapMidiControlToString.at(((int)c.type << 8) | c.number);
+  return mapMidiControlToString.at((static_cast<int>(c.type) << 8) | c.number);
 }
 Midi::MidiControl Midi::Profile::controlFromString(const std::string& str) {
   int cEnc = mapStringToMidiControl.at(str);
-  return {(Midi::MidiControl::Type)(cEnc >> 8), (uint8_t)(cEnc & 0xFF)};
+  return {static_cast<Midi::MidiControl::Type>(cEnc >> 8), static_cast<uint8_t>(cEnc & 0xFF)};
 }
 std::optional<Midi::MidiControl> Midi::Profile::catchIndicator(MidiControl c) {
   try {
@@ -133,7 +139,7 @@ Midi::Midi(const std::string& deviceName, const std::string& profileFilename, co
         midi->callback({control, value});
         break;
       case MidiControl::Type::Fader:
-        value = (float)std::get<uint8_t>(event.value) / 127.0;
+        value = static_cast<float>(std::get<uint8_t>(event.value)) / 127.0;
         try {
           FaderState state = midi->faderStates.at(event.control.number);
           if (state.received

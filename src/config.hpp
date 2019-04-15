@@ -1,19 +1,16 @@
 #ifndef Config_h
 #define Config_h
 
-#include "midi.hpp"
-#include "osc.hpp"
-#include "output.hpp"
-
-#define ASIO_STANDALONE
-#include <asio.hpp>
-
-#include <memory>
-#include <optional>
-#include <set>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <algorithm>      // for find_if
+#include <memory>         // for shared_ptr, unique_ptr
+#include <set>            // for set
+#include <string>         // for string, operator==
+#include <unordered_map>  // for unordered_map
+#include <utility>        // for move
+#include <vector>         // for vector<>::const_iterator, vector
+#include "output.hpp" // IWYU pragma: keep
+class Midi;
+namespace asio { class io_context; }
 
 class Config {
   public:

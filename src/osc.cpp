@@ -1,5 +1,17 @@
 #include "osc.hpp"
 
+// IWYU pragma: no_include <asio/buffer.hpp>
+// IWYU pragma: no_include <asio/ip/address_v4.hpp>
+// IWYU pragma: no_include <asio/ip/impl/address.ipp>
+
+#include <bits/stdint-intn.h>        // for int32_t
+#include <iostream>                  // for operator<<, endl, basic_ostream
+#include <iterator>                  // for back_insert_iterator, back_inserter
+#include <new>                       // for operator new
+#include <numeric>                   // for accumulate
+#include <system_error>              // for error_code
+#include "utils.hpp"                 // for bindMember
+
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
@@ -16,23 +28,9 @@ std::vector<char> OSC::Message::makeTypeTagString(std::vector<Type> types) {
   return makeOSCstring(str);
 }
 
-template <size_t I = 0, typename V>
-std::vector<char> data_from_variant(V var) {
-  size_t i = var.index();
-  if constexpr (I >= std::variant_size_v<V>) {
-    return std::vector<char>();
-  }
-  if (i == I) {
-    std::variant_alternative_t<I, V> v = std::get<I>(var);
-    size_t n = sizeof(std::variant_alternative_t<I, V>);
-    return std::vector<char>(&v, &v + n);
-  }
-  return data_from_variant<I+1>(var);
-}
-
 template <typename It>
 std::vector<char> concatIt(It data) {
-  size_t n = std::accumulate(data.begin(), data.end(), 0, [](size_t a, std::vector<char> b){ return a + b.size(); });
+  std::size_t n = std::accumulate(data.begin(), data.end(), 0, [](std::size_t a, std::vector<char> b){ return a + b.size(); });
   std::vector<char> v(n);
   auto it = v.begin();
   for (std::vector<char> d : data) {
@@ -43,9 +41,9 @@ std::vector<char> concatIt(It data) {
 }
 
 template <typename... Types>
-size_t lengthOfDatas() { return 0; }
+std::size_t lengthOfDatas() { return 0; }
 template <typename... Types>
-size_t lengthOfDatas(const std::vector<char>& data, Types... datas) { return (data.size() + lengthOfDatas(datas...)); }
+std::size_t lengthOfDatas(const std::vector<char>& data, Types... datas) { return (data.size() + lengthOfDatas(datas...)); }
 
 template <typename It, typename... Types>
 void copyDatas(It it) { (void)it; }
@@ -57,7 +55,7 @@ void copyDatas(It it, std::vector<char> data, Types... datas) {
 
 template <typename... Types>
 std::vector<char> concat(Types... datas) {
-  size_t n = lengthOfDatas(datas...);
+  std::size_t n = lengthOfDatas(datas...);
   std::vector<char> v(n);
   copyDatas(v.begin(), datas...);
   return v;
@@ -81,7 +79,7 @@ std::vector<char> OSC::Message::makeArguments(std::vector<Argument> arg) {
 OSC::Message::Message(std::vector<char> packet) {
   auto addressPatternEnd = std::find(packet.begin(), packet.end(), '\0');
   addressPattern = std::string(packet.begin(), addressPatternEnd);
-  size_t addressPatternPad = 4 - ((addressPatternEnd - packet.begin()) % 4);
+  std::size_t addressPatternPad = 4 - ((addressPatternEnd - packet.begin()) % 4);
   auto typeTagStringBegin = addressPatternEnd + addressPatternPad;
   if (*typeTagStringBegin != ',') {
     std::cerr << "Missing Type Tag String" << std::endl;
@@ -96,7 +94,7 @@ OSC::Message::Message(std::vector<char> packet) {
     case 'b': return Type::b;
     default: throw;
   }});
-  size_t typeTagStringPad = 3 - ((typeTagStringEnd - typeTagStringBegin + 3) % 4);
+  std::size_t typeTagStringPad = 3 - ((typeTagStringEnd - typeTagStringBegin + 3) % 4);
   char* argumentsIt = &*(typeTagStringEnd + typeTagStringPad);
   for (Type t : types) {
     switch (t) {
@@ -112,8 +110,8 @@ OSC::Message::Message(std::vector<char> packet) {
         {
           std::string str(argumentsIt);
           arguments.emplace_back(str);
-          size_t n = str.size();
-          size_t pad = 3 - ((n + 3) % 4);
+          std::size_t n = str.size();
+          std::size_t pad = 3 - ((n + 3) % 4);
           argumentsIt += n + pad;
         }
         break;
@@ -123,7 +121,7 @@ OSC::Message::Message(std::vector<char> packet) {
           argumentsIt += sizeof(int32_t);
           std::vector<char> v(argumentsIt, argumentsIt + n);
           arguments.emplace_back(v);
-          size_t pad = 3 - ((n + 3) % 4);
+          std::size_t pad = 3 - ((n + 3) % 4);
           argumentsIt += n + pad;
         }
         break;
@@ -143,20 +141,18 @@ float OSC::Message::toFloat() {
     throw;
   }
   return std::visit(overloaded
-                    { [](int32_t v)           -> float { return (float)v; }
+                    { [](int32_t v)           -> float { return static_cast<float>(v); }
                       , [](float v)             -> float { return v; }
                       , [](std::string v)       -> float { (void)v; throw; }
                       , [](std::vector<char> v) -> float { (void)v; throw; }
                     }, arguments[0]);
 }
 
-using namespace std::placeholders;
-
-void OSC::recvHandler(const asio::error_code& error, size_t count_recv) {
+void OSC::recvHandler(const asio::error_code& error, std::size_t count_recv) {
   (void)error;
   (void)count_recv;
   callback(Message(recvBuffer));
-  socket.async_receive_from(asio::buffer(recvBuffer), recvEndpoint, std::bind(&OSC::recvHandler, this, _1, _2));
+  socket.async_receive_from(asio::buffer(recvBuffer), recvEndpoint, bindMember(&OSC::recvHandler, this));
 }
 
 OSC::OSC(asio::io_context& io_context, const std::string& ip, unsigned short sendPort, unsigned short recvPort)
@@ -166,7 +162,7 @@ OSC::OSC(asio::io_context& io_context, const std::string& ip, unsigned short sen
   , socket(io_context, udp::endpoint(asio::ip::address(asio::ip::address_v4::any()), recvPort))
     , recvBuffer(1024)
 {
-  socket.async_receive_from(asio::buffer(recvBuffer), recvEndpoint, std::bind(&OSC::recvHandler, this, _1, _2));
+  socket.async_receive_from(asio::buffer(recvBuffer), recvEndpoint, bindMember(&OSC::recvHandler, this));
 }
 
 void OSC::send(Message message) {
@@ -174,7 +170,7 @@ void OSC::send(Message message) {
 }
 
 std::pair<std::string, bool> OSC::merge(std::string channel, std::string action) const {
-  size_t channelTypeEnd = channel.find('$');
+  std::size_t channelTypeEnd = channel.find('$');
   std::string channelType = channel.substr(0, channelTypeEnd);
   std::string channelArg = channel.substr(channelTypeEnd + 1);
   std::string path;

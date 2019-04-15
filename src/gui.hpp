@@ -1,16 +1,16 @@
 #ifndef GUI_h
 #define GUI_h
 
-#include "utils.hpp"
-
 #define ASIO_STANDALONE
-#include <websocketpp/config/asio_no_tls.hpp>
-#include <websocketpp/server.hpp>
-
-#include <functional>
-#include <iostream>
-#include <set>
-#include <string>
+#include <functional>                             // for function
+#include <memory>                                 // for owner_less
+#include <set>                                    // for set
+#include <string>                                 // for string
+#include <utility>                                // for move
+#include <websocketpp/config/asio_no_tls.hpp>     // for asio
+#include "websocketpp/common/connection_hdl.hpp"  // for connection_hdl
+#include "websocketpp/roles/server_endpoint.hpp"  // for server
+namespace asio { class io_context; }
 
 class GUI {
   private:

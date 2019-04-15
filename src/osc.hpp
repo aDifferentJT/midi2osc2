@@ -1,21 +1,24 @@
 #ifndef OSC_h
 #define OSC_h
 
-#include "output.hpp"
-
 #define ASIO_STANDALONE
-#include <asio.hpp>
+#include <asio.hpp> // IWYU pragma: keep
+// IWYU pragma: no_include <asio/error_code.hpp>
+// IWYU pragma: no_include <asio/io_context.hpp>
+// IWYU pragma: no_include <asio/ip/address.hpp>
+// IWYU pragma: no_include <asio/ip/udp.hpp>
+// IWYU pragma: no_forward_declare asio::io_context
 
-#include <algorithm>
-#include <cassert>
-#include <functional>
-#include <iostream>
-#include <numeric>
-#include <string>
-#include <type_traits>
-#include <utility>
-#include <variant>
-#include <vector>
+#include <bits/stdint-intn.h>   // for int32_t
+#include <algorithm>            // for reverse
+#include <functional>           // for function
+#include <iosfwd>               // for size_t
+#include <string>               // for string
+#include <type_traits>          // for endian, endian::little, endian::native
+#include <utility>              // for move, pair
+#include <variant>              // for variant
+#include <vector>               // for vector, vector<>::iterator
+#include "output.hpp"           // for Output
 
 using asio::ip::udp;
 
@@ -37,7 +40,7 @@ class OSC : public Output {
         template <typename T>
           static std::vector<char> makeOSCnum(T v) {
             char* p = (char*)&v;
-            size_t n = sizeof(T);
+            std::size_t n = sizeof(T);
             std::vector<char> res(p, p + n);
             if (std::endian::native == std::endian::little) {
               std::reverse(res.begin(), res.end());
@@ -53,7 +56,7 @@ class OSC : public Output {
           }
         template <typename T>
           static T unmakeOSCnum(char* v) {
-            size_t n = sizeof(T);
+            std::size_t n = sizeof(T);
             if (std::endian::native == std::endian::little) {
               std::reverse(v, v + n);
             }
@@ -61,9 +64,9 @@ class OSC : public Output {
           }
         template <typename T>
           static std::vector<char> makeOSCstring(T str) {
-            size_t pad = 3 - ((str.size() + 3) % 4);
+            std::size_t pad = 3 - ((str.size() + 3) % 4);
             std::vector<char> v(str.begin(), str.end());
-            for(size_t i = 0; i < pad; i++) {
+            for(std::size_t i = 0; i < pad; i++) {
               v.push_back('\0');
             }
             return v;
@@ -107,7 +110,7 @@ class OSC : public Output {
     std::function<void(Message)> callback = [](Message m){ (void)m; };
     std::vector<char> recvBuffer;
     udp::socket::endpoint_type recvEndpoint;
-    void recvHandler(const asio::error_code& error, size_t count_recv);
+    void recvHandler(const asio::error_code& error, std::size_t count_recv);
   public:
     OSC(asio::io_context& io_context, const std::string& ip, unsigned short sendPort, unsigned short recvPort);
     void send(Message message);

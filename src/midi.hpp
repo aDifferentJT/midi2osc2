@@ -1,18 +1,15 @@
 #ifndef MIDI_h
 #define MIDI_h
 
-#include <rtmidi/RtMidi.h>
-
-#include <cassert>
-#include <cmath>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <optional>
-#include <string>
-#include <unordered_map>
-#include <variant>
-#include <vector>
+#include <bits/stdint-uintn.h>  // for uint8_t
+#include <rtmidi/RtMidi.h>      // for RtMidiIn, RtMidiOut
+#include <functional>           // for function
+#include <optional>             // for optional
+#include <string>               // for string
+#include <unordered_map>        // for unordered_map
+#include <utility>              // for move
+#include <variant>              // for variant
+#include <vector>               // for vector
 
 class Config;
 

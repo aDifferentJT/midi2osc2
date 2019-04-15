@@ -1,20 +1,17 @@
 #ifndef Mapping_h
 #define Mapping_h
 
-#include "config.hpp"
-#include "gui.hpp"
-#include "midi.hpp"
-#include "output.hpp"
-#include "utils.hpp"
-
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <optional>
-#include <unordered_map>
-#include <string>
-#include <vector>
+#include <fstream>        // for size_t
+#include <memory>         // for shared_ptr
+#include <optional>       // for optional, nullopt
+#include <set>            // for set
+#include <stdexcept>      // for out_of_range
+#include <string>         // for string, allocator, operator+, char_traits
+#include <unordered_map>  // for unordered_map, unordered_map<>::mapped_type
+#include <utility>        // for move
+#include <vector>         // for vector
+#include "config.hpp"     // for Config
+class GUI;
 
 class Mappings {
   private:
@@ -22,7 +19,7 @@ class Mappings {
       const std::string output;
       const std::string path;
       bool inverted = false;
-      ControlOutput(const std::string& str, size_t start = 0);
+      ControlOutput(const std::string& str, std::size_t start = 0);
       ControlOutput() = default;
       ControlOutput(std::string output, std::string path, bool inverted) : output(std::move(output)), path(std::move(path)), inverted(inverted) {}
       std::string encode() const { return output + ":" + path + ":" + (inverted ? "true" : "false"); }
@@ -30,14 +27,14 @@ class Mappings {
     struct ChannelOutput {
       const std::string output;
       const std::string channel;
-      ChannelOutput(const std::string& str, size_t start = 0);
+      ChannelOutput(const std::string& str, std::size_t start = 0);
       ChannelOutput() = default;
       ChannelOutput(std::string output, std::string channel) : output(std::move(output)), channel(std::move(channel)) {}
       std::string encode() const { return output + ":" + channel; }
     };
     struct ActionOutput {
       const std::string action;
-      ActionOutput(const std::string& str, size_t start = 0);
+      ActionOutput(const std::string& str, std::size_t start = 0);
       ActionOutput() = default;
       ActionOutput(std::string action) : action(std::move(action)) {}
       std::string encode() const { return action; }
@@ -114,7 +111,7 @@ class Mappings {
     const Config& config;
     std::shared_ptr<GUI> gui;
     std::vector<Mapping> mappings;
-    size_t currentMappingIndex = 0;
+    std::size_t currentMappingIndex = 0;
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
 
     void refreshBank();
