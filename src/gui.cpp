@@ -2,16 +2,16 @@
 
 using namespace std::placeholders;
 
-void GUI::openHandler(Connection connection) {
+void GUI::openHandler(const Connection& connection) {
   connections.insert(connection);
   openCallback();
 }
 
-void GUI::closeHandler(Connection connection) {
+void GUI::closeHandler(const Connection& connection) {
   connections.erase(connection);
 }
 
-void GUI::recvHandler(Connection connection, Message message) {
+void GUI::recvHandler(const Connection& connection, const Message& message) {
   (void)connection;
   recvCallback(message->get_payload());
 }
@@ -21,9 +21,9 @@ GUI::GUI(asio::io_context& io_context) {
     server.clear_access_channels(websocketpp::log::alevel::all);
     server.init_asio(&io_context);
     server.set_reuse_addr(true);
-    server.set_open_handler(std::bind(&GUI::openHandler, this, _1));
-    server.set_close_handler(std::bind(&GUI::closeHandler, this, _1));
-    server.set_message_handler(std::bind(&GUI::recvHandler, this, _1, _2));
+    server.set_open_handler(bindMember(&GUI::openHandler, this));
+    server.set_close_handler(bindMember(&GUI::closeHandler, this));
+    server.set_message_handler(bindMember(&GUI::recvHandler, this));
     server.listen(8080);
     server.start_accept();
   } catch (websocketpp::exception const & e) {
@@ -34,14 +34,14 @@ GUI::GUI(asio::io_context& io_context) {
 }
 
 GUI::~GUI() {
-  for (Connection connection : connections) {
+  for (const Connection& connection : connections) {
     server.close(connection, websocketpp::close::status::going_away, "Server closing");
   }
   server.stop_listening();
 }
 
-void GUI::send(std::string str) {
-  for (Connection connection : connections) {
+void GUI::send(const std::string& str) {
+  for (const Connection& connection : connections) {
     server.send(connection, str.c_str(), str.size(), websocketpp::frame::opcode::text);
   }
 }

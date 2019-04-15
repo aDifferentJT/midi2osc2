@@ -1,6 +1,6 @@
 #include "config.hpp"
 
-Config::Config(asio::io_context& io_context, std::string filename) {
+Config::Config(asio::io_context& io_context, const std::string& filename) {
   std::ifstream f(filename);
   while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
     std::string str;
@@ -20,7 +20,7 @@ Config::Config(asio::io_context& io_context, std::string filename) {
       size_t inPortStart = outPortEnd + 1;
       size_t inPortEnd = str.find(':', inPortStart);
       unsigned short inPort = std::stoi(str.substr(inPortStart, inPortEnd - inPortStart));
-      outputs.emplace(name, new OSC(io_context, address, outPort, inPort));
+      outputs[name] = std::make_unique<OSC>(io_context, address, outPort, inPort);
       if (inPortEnd != std::string::npos) {
         outputs.at(name)->send(str.substr(inPortEnd + 1));
       }
@@ -31,7 +31,7 @@ Config::Config(asio::io_context& io_context, std::string filename) {
       size_t profileStart = nameEnd + 1;
       size_t profileEnd = str.find(':', profileStart);
       std::string profile = str.substr(profileStart, profileEnd - profileStart);
-      midi = new Midi(name, profile, *this);
+      midi = std::make_shared<Midi>(name, profile, *this);
     } else if (type == "bank") {
       banks.push_back(str.substr(typeEnd + 1));
     } else if (type == "bankLeft") {

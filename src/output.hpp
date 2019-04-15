@@ -6,6 +6,12 @@
 
 class Output {
   public:
+    Output() = default;
+    Output(const Output&) = delete;
+    Output& operator=(const Output&) = delete;
+    Output(Output&&) = delete;
+    Output& operator=(Output&&) = delete;
+    virtual ~Output() = default;
     virtual void send(std::string addressPattern) = 0;
     virtual void send(std::string addressPattern, float v) = 0;
     virtual void setCallback(std::function<void(std::string, float)> f) = 0;

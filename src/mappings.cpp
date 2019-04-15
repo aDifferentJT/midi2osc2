@@ -1,73 +1,90 @@
 #include "mappings.hpp"
 
-template <typename T, typename U>
-std::optional<T> bindOptional(std::optional<U> x, std::function<T(U*)> f) { return x ? std::optional{f(&*x)} : std::nullopt; }
+Mappings::ControlOutput::ControlOutput(const std::string& str, size_t start)
+  : output([str, start]() {
+    size_t outputStart = start;
+    size_t outputEnd = str.find(':', outputStart);
+    return str.substr(outputStart, outputEnd - outputStart);
+  }())
+, path([str, start]() {
+  size_t outputStart = start;
+  size_t outputEnd = str.find(':', outputStart);
+  size_t pathStart = outputEnd + 1;
+  size_t pathEnd = str.find(':', pathStart);
+  return str.substr(pathStart, pathEnd - pathStart);
+}())
+, inverted([str, start]() {
+  size_t outputStart = start;
+  size_t outputEnd = str.find(':', outputStart);
+  size_t pathStart = outputEnd + 1;
+  size_t pathEnd = str.find(':', pathStart);
+  size_t invertedStart = pathEnd + 1;
+  size_t invertedEnd = str.find(':', invertedStart);
+  return str.substr(invertedStart, invertedEnd - invertedStart) == "true";
+}()) {}
 
-template <typename T, typename U>
-std::optional<U> getOpt(std::unordered_map<T,U> xs, T x) {
+Mappings::ChannelOutput::ChannelOutput(const std::string& str, size_t start)
+  : output([str, start]() {
+    size_t outputStart = start;
+    size_t outputEnd = str.find(':', outputStart);
+    return str.substr(outputStart, outputEnd - outputStart);
+  }())
+, channel([str, start]() {
+  size_t outputStart = start;
+  size_t outputEnd = str.find(':', outputStart);
+  size_t channelStart = outputEnd + 1;
+  size_t channelEnd = str.find(':', channelStart);
+  return str.substr(channelStart, channelEnd - channelStart);
+}()) {}
+
+Mappings::ActionOutput::ActionOutput(const std::string& str, size_t start) 
+  : action([str, start]() {
+    size_t actionStart = start;
+    size_t actionEnd = str.find(':', actionStart);
+    return str.substr(actionStart, actionEnd - actionStart);
+  }()) {}
+
+void Mappings::Mapping::write() const {
+  std::ofstream f(filename);
+  for (auto& control : controls) {
+    f << "control:" << control.first << ":" << control.second.output << ":" << control.second.path << "\n";
+  }
+  for (auto& channel : channels) {
+    f << "channel:" << channel.first << ":" << channel.second.output << ":" << channel.second.channel << "\n";
+  }
+  for (auto& action : actions) {
+    f << "action:" << action.first << ":" << action.second.action << "\n";
+  }
+  f.close();
+}
+
+std::optional<Mappings::ControlOutput> Mappings::Mapping::outputFromString(const std::string& str) {
   try {
-    return xs.at(x);
+    return controls.at(str);
   } catch (std::out_of_range&) {
-    return std::nullopt;
+    try {
+      ChannelOutput channel = channels.at(config.channelForControl(str));
+      ActionOutput action = actions.at(config.actionForControl(str));
+      std::pair<std::string, bool> merged = config.outputs.at(channel.output)->merge(channel.channel, action.action);
+      return ControlOutput(channel.output, merged.first, merged.second);
+    } catch (std::out_of_range&) {
+      std::cerr << "Control not mapped: " << str << std::endl;
+      return std::nullopt;
+    }
   }
 }
 
-Mappings::ControlOutput::ControlOutput(std::string str, size_t start) {
-  size_t outputStart = start;
-  size_t outputEnd = str.find(':', outputStart);
-  output = str.substr(outputStart, outputEnd - outputStart);
-  size_t pathStart = outputEnd + 1;
-  size_t pathEnd = str.find(':', pathStart);
-  path = str.substr(pathStart, pathEnd - pathStart);
-  size_t invertedStart = pathEnd + 1;
-  size_t invertedEnd = str.find(':', invertedStart);
-  inverted = str.substr(invertedStart, invertedEnd - invertedStart) == "true";
-}
-
-Mappings::ChannelOutput::ChannelOutput(std::string str, size_t start) {
-  size_t outputStart = start;
-  size_t outputEnd = str.find(':', outputStart);
-  output = str.substr(outputStart, outputEnd - outputStart);
-  size_t channelStart = outputEnd + 1;
-  size_t channelEnd = str.find(':', channelStart);
-  channel = str.substr(channelStart, channelEnd - channelStart);
-}
-
-Mappings::ActionOutput::ActionOutput(std::string str, size_t start) {
-  size_t actionStart = start;
-  size_t actionEnd = str.find(':', actionStart);
-  action = str.substr(actionStart, actionEnd - actionStart);
-}
-
-void Mappings::Mapping::write() const {
-    std::ofstream f(filename);
-    for (std::pair<std::string, ControlOutput> control : controls) {
-      f << "control:" << control.first << ":" << control.second.output << ":" << control.second.path << "\n";
-    }
-    for (std::pair<std::string, ChannelOutput> channel : channels) {
-      f << "channel:" << channel.first << ":" << channel.second.output << ":" << channel.second.channel << "\n";
-    }
-    for (std::pair<std::string, ActionOutput> action : actions) {
-      f << "action:" << action.first << ":" << action.second.action << "\n";
-    }
-    f.close();
-}
-
-std::optional<Mappings::ControlOutput> Mappings::Mapping::outputFromString(std::string str) {
-      try {
-        return controls.at(str);
-      } catch (std::out_of_range&) {
-        try {
-          ChannelOutput channel = channels.at(config.channelForControl(str));
-          ActionOutput action = actions.at(config.actionForControl(str));
-          Output* output = config.outputs.at(channel.output);
-          std::pair<std::string, bool> merged = output->merge(channel.channel, action.action);
-          return ControlOutput(channel.output, merged.first, merged.second);
-        } catch (std::out_of_range&) {
-          std::cerr << "Control not mapped: " << str << std::endl;
-          return std::nullopt;
-        }
-      }
+std::string Mappings::Mapping::encodedMappingOf(const std::string& controlName) {
+  std::optional<ControlOutput> control = getOpt(controls, controlName);
+  std::optional<ChannelOutput> channel = getOpt(channels, config.channelForControl(controlName));
+  std::optional<ActionOutput> action = getOpt(actions, config.actionForControl(controlName));
+  return
+    ( bindOptional<std::string, ControlOutput>(control, &ControlOutput::encode).value_or("::")
+     + ":" + config.channelForControl(controlName)
+     + ":" + bindOptional<std::string, ChannelOutput>(channel, &ChannelOutput::encode).value_or(":")
+     + ":" + config.actionForControl(controlName)
+     + ":" + bindOptional<std::string, ActionOutput>(action, &ActionOutput::encode).value_or("")
+    );
 }
 
 void Mappings::refreshBank() {
@@ -86,7 +103,7 @@ void Mappings::refreshBank() {
   }
 }
 
-Mappings::Mappings(const Config& config, GUI* gui)
+Mappings::Mappings(const Config& config, const std::shared_ptr<GUI>& gui)
   : config(config)
     , gui(gui)
 {
@@ -107,35 +124,22 @@ Mappings::Mappings(const Config& config, GUI* gui)
       if (control) {
         this->config.outputs.at(control->output)->send(control->path, control->inverted ? 1.0 - event.value : event.value);
       }
-      {
-        std::optional<ControlOutput> control = getOpt(currentMapping().controls, event.control);
-        std::optional<ChannelOutput> channel = getOpt(currentMapping().channels, this->config.channelForControl(event.control));
-        std::optional<ActionOutput> action = getOpt(currentMapping().actions, this->config.actionForControl(event.control));
-        this->gui->send
-          ( "moved:" + event.control
-           + ":" + std::to_string(event.value)
-           + ":" + bindOptional<std::string, ControlOutput>(control, &ControlOutput::encode).value_or("::")
-           + ":" + this->config.channelForControl(event.control)
-           + ":" + bindOptional<std::string, ChannelOutput>(channel, &ChannelOutput::encode).value_or(":")
-           + ":" + this->config.actionForControl(event.control)
-           + ":" + bindOptional<std::string, ActionOutput>(action, &ActionOutput::encode).value_or("")
-          );
-      }
+      this->gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + currentMapping().encodedMappingOf(event.control));
     }
   });
-  for (std::pair<std::string, Output*> output : config.outputs) {
+  for (auto& output : config.outputs) {
     output.second->setCallback([this](std::string path, float v) {
-      try {
-        std::string control = this->currentMapping().feedbacks.at(path);
-        this->config.midi->feedback(control, v);
-      } catch (std::out_of_range&) {}
+      std::optional<std::string> control = this->currentMapping().feedbackFor(path);
+      if (control) {
+        this->config.midi->feedback(*control, v);
+      }
     });
   }
   gui->setOpenCallback([this]() {
     refreshBank();
 
     std::string devices = "devices";
-    for (std::pair<std::string, Output*> output : this->config.outputs) {
+    for (auto& output : this->config.outputs) {
       devices += ":" + output.first;
     }
     this->gui->send(devices);
@@ -149,37 +153,37 @@ Mappings::Mappings(const Config& config, GUI* gui)
       size_t controlStart = commandEnd + 1;
       size_t controlEnd = str.find(':', controlStart);
       std::string control = str.substr(controlStart, controlEnd - controlStart);
-      this->currentMapping().controls[control] = ControlOutput(str, controlEnd + 1);
+      this->currentMapping().addControl(control, ControlOutput(str, controlEnd + 1));
       currentMapping().addFeedback(control);
     } else if (command == "clearControl") {
       size_t controlStart = commandEnd + 1;
       size_t controlEnd = str.find(':', controlStart);
       std::string control = str.substr(controlStart, controlEnd - controlStart);
-      this->currentMapping().controls.erase(control);
+      this->currentMapping().removeControl(control);
       currentMapping().addFeedback(control);
     } else if (command == "setChannel") {
       size_t channelStart = commandEnd + 1;
       size_t channelEnd = str.find(':', channelStart);
       std::string channel = str.substr(channelStart, channelEnd - channelStart);
-      this->currentMapping().channels[channel] = ChannelOutput(str, channelEnd + 1);
+      this->currentMapping().addChannel(channel, ChannelOutput(str, channelEnd + 1));
       currentMapping().addFeedbackForChannel(channel);
     } else if (command == "clearChannel") {
       size_t channelStart = commandEnd + 1;
       size_t channelEnd = str.find(':', channelStart);
       std::string channel = str.substr(channelStart, channelEnd - channelStart);
-      this->currentMapping().channels.erase(channel);
+      this->currentMapping().removeChannel(channel);
       currentMapping().addFeedbackForChannel(channel);
     } else if (command == "setAction") {
       size_t actionStart = commandEnd + 1;
       size_t actionEnd = str.find(':', actionStart);
       std::string action = str.substr(actionStart, actionEnd - actionStart);
-      this->currentMapping().actions[action] = ActionOutput(str, actionEnd + 1);
+      this->currentMapping().addAction(action, ActionOutput(str, actionEnd + 1));
       currentMapping().addFeedbackForAction(action);
     } else if (command == "clearAction") {
       size_t actionStart = commandEnd + 1;
       size_t actionEnd = str.find(':', actionStart);
       std::string action = str.substr(actionStart, actionEnd - actionStart);
-      this->currentMapping().actions.erase(action);
+      this->currentMapping().removeAction(action);
       currentMapping().addFeedbackForAction(action);
     } else if (command == "echo") {
       this->gui->send(str);
@@ -202,20 +206,9 @@ Mappings::Mappings(const Config& config, GUI* gui)
         }
       }
       refreshBank();
-      if (controlName != "") {
+      if (!controlName.empty()) {
         //send the named control data again after the bank switch has been made
-        std::optional<ControlOutput> control = getOpt(currentMapping().controls, controlName);
-        std::optional<ChannelOutput> channel = getOpt(currentMapping().channels, this->config.channelForControl(controlName));
-        std::optional<ActionOutput> action = getOpt(currentMapping().actions, this->config.actionForControl(controlName));
-        this->gui->send
-          ( "moved:" + controlName
-           + ":unchanged"
-           + ":" + bindOptional<std::string, ControlOutput>(control, &ControlOutput::encode).value_or("::")
-           + ":" + this->config.channelForControl(controlName)
-           + ":" + bindOptional<std::string, ChannelOutput>(channel, &ChannelOutput::encode).value_or(":")
-           + ":" + this->config.actionForControl(controlName)
-           + ":" + bindOptional<std::string, ActionOutput>(action, &ActionOutput::encode).value_or("")
-          );
+        this->gui->send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
       }
     }
     this->write();
@@ -234,19 +227,19 @@ Mappings::Mappings(const Config& config, GUI* gui)
                        size_t controlStart = typeEnd + 1;
                        size_t controlEnd = line.find(':', controlStart);
                        std::string control = line.substr(controlStart, controlEnd - controlStart);
-                       mapping.controls[control] = ControlOutput(line, controlEnd + 1);
+                       mapping.addControl(control, ControlOutput(line, controlEnd + 1));
                        mapping.addFeedback(control);
                      } else if (type == "channel") {
                        size_t channelStart = typeEnd + 1;
                        size_t channelEnd = line.find(':', channelStart);
                        std::string channel = line.substr(channelStart, channelEnd - channelStart);
-                       mapping.channels[channel] = ChannelOutput(line, channelEnd + 1);
+                       mapping.addChannel(channel, ChannelOutput(line, channelEnd + 1));
                        mapping.addFeedbackForChannel(channel);
                      } else if (type == "action") {
                        size_t actionStart = typeEnd + 1;
                        size_t actionEnd = line.find(':', actionStart);
                        std::string action = line.substr(actionStart, actionEnd - actionStart);
-                       mapping.actions[action] = ActionOutput(line, actionEnd + 1);
+                       mapping.addAction(action, ActionOutput(line, actionEnd + 1));
                        mapping.addFeedbackForAction(action);
                      }
                    }

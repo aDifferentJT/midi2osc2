@@ -1,1 +1,4 @@
-run-clang-tidy -header-filter='.*' -checks='cppcoreguidelines-*,clang-analyzer-*,modernize-*,performance-*,portability-*,readability-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-reinterpret-cast'
+cd src
+headers="$(echo $(ls *.hpp) | tr " " "|")"
+cd ../build
+run-clang-tidy -header-filter=$headers -checks='cppcoreguidelines-*,clang-analyzer-*,modernize-*,performance-*,portability-*,readability-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-reinterpret-cast'

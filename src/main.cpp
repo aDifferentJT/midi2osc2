@@ -4,7 +4,9 @@
 #include "output.hpp"
 #include "config.hpp"
 
+#include <cassert>
 #include <csignal>
+#include <memory>
 
 asio::io_context io_context;
 
@@ -14,21 +16,16 @@ extern "C" void stop(int sig) {
 }
 
 int main(int argc, char* argv[]) {
-  (void)argc;
-  (void)argv;
+  if (argc < 2) {
+    std::cerr << "Missing command line argument" << std::endl;
+    throw;
+  }
 
-  //Midi midi("MIDI Mix", "akai_midimix.profile");
+  Config config(io_context, argv[1]);
 
-  /*
-  OSC qlc(io_context, "127.0.0.1", 7700, 9000);
-  outputs["QLC+"] = &qlc;
-*/
+  auto gui = std::make_shared<GUI>(io_context);
 
-  Config config(io_context, "midi2osc2.conf");
-
-  GUI gui(io_context);
-
-  Mappings mappings(config, &gui);
+  Mappings mappings(config, gui);
 
   std::signal(SIGINT, &stop);
 

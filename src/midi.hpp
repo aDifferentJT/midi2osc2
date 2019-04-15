@@ -64,7 +64,7 @@ class Midi {
     void feedback(const std::string& controlS, float v);
     void setCallback(std::function<void(Event)> f) { callback = std::move(f); }
 
-    void setLed(std::string control, bool value) { setLed(profile.controlFromString(control).number, value); }
+    void setLed(const std::string& control, bool value) { setLed(profile.controlFromString(control).number, value); }
 };
 
 #endif

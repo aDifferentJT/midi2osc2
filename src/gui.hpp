@@ -1,6 +1,8 @@
 #ifndef GUI_h
 #define GUI_h
 
+#include "utils.hpp"
+
 #define ASIO_STANDALONE
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
@@ -22,14 +24,18 @@ class GUI {
     std::function<void()> openCallback;
     std::function<void(std::string)> recvCallback;
 
-    void openHandler(Connection connection);
-    void closeHandler(Connection connection);
-    void recvHandler(Connection connection, Message message);
+    void openHandler(const Connection& connection);
+    void closeHandler(const Connection& connection);
+    void recvHandler(const Connection& connection, const Message& message);
   public:
     GUI(asio::io_context& io_context);
+    GUI(const GUI&) = delete;
+    GUI& operator =(const GUI&) = delete;
+    GUI(GUI&& other) = default;
+    GUI& operator =(GUI&&) = delete;
     ~GUI();
 
-    void send(std::string str);
+    void send(const std::string& str);
 
     void setOpenCallback(std::function<void()> f) { openCallback = std::move(f); }
     void setRecvCallback(std::function<void(std::string)> f) { recvCallback = std::move(f); }

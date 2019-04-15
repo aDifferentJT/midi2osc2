@@ -5,10 +5,12 @@
 #include "gui.hpp"
 #include "midi.hpp"
 #include "output.hpp"
+#include "utils.hpp"
 
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <unordered_map>
 #include <string>
@@ -17,27 +19,27 @@
 class Mappings {
   private:
     struct ControlOutput {
-      std::string output;
-      std::string path;
-      bool inverted;
-      ControlOutput(std::string str, size_t start = 0);
+      const std::string output;
+      const std::string path;
+      bool inverted = false;
+      ControlOutput(const std::string& str, size_t start = 0);
       ControlOutput() = default;
-      ControlOutput(std::string output, std::string path, bool inverted) : output(output), path(path), inverted(inverted) {}
+      ControlOutput(std::string output, std::string path, bool inverted) : output(std::move(output)), path(std::move(path)), inverted(inverted) {}
       std::string encode() const { return output + ":" + path + ":" + (inverted ? "true" : "false"); }
     };
     struct ChannelOutput {
-      std::string output;
-      std::string channel;
-      ChannelOutput(std::string str, size_t start = 0);
+      const std::string output;
+      const std::string channel;
+      ChannelOutput(const std::string& str, size_t start = 0);
       ChannelOutput() = default;
-      ChannelOutput(std::string output, std::string channel) : output(output), channel(channel) {}
+      ChannelOutput(std::string output, std::string channel) : output(std::move(output)), channel(std::move(channel)) {}
       std::string encode() const { return output + ":" + channel; }
     };
     struct ActionOutput {
-      std::string action;
-      ActionOutput(std::string str, size_t start = 0);
+      const std::string action;
+      ActionOutput(const std::string& str, size_t start = 0);
       ActionOutput() = default;
-      ActionOutput(std::string action) : action(action) {}
+      ActionOutput(std::string action) : action(std::move(action)) {}
       std::string encode() const { return action; }
     };
     struct Mapping {
@@ -45,17 +47,50 @@ class Mappings {
         const Config& config;
       public:
         const std::string filename;
+      private:
         std::unordered_map<std::string, ControlOutput> controls;
         std::unordered_map<std::string, ChannelOutput> channels;
         std::unordered_map<std::string, ActionOutput> actions;
         std::unordered_map<std::string, std::string> feedbacks;
-        Mapping(const Config& config, std::string filename) : config(config), filename(filename) {}
+      public:
+        Mapping(const Config& config, std::string filename) : config(config), filename(std::move(filename)) {}
 
         void write() const;
 
-        std::optional<ControlOutput> outputFromString(std::string str);
+        std::optional<ControlOutput> outputFromString(const std::string& str);
 
-        void addFeedback(std::string control) {
+        std::string encodedMappingOf(const std::string& controlName);
+
+        std::optional<std::string> feedbackFor(const std::string& str) {
+          try {
+            return feedbacks.at(str);
+          } catch (std::out_of_range&) {
+            return std::nullopt;
+          }
+        }
+
+        void addControl(const std::string& control, ControlOutput&& output) {
+          controls.erase(control);
+          controls.emplace(control, output);
+        }
+        void removeControl(const std::string& control) {
+          controls.erase(control);
+        }
+        void addChannel(const std::string& channel, ChannelOutput&& output) {
+          channels.erase(channel);
+          channels.emplace(channel, output);
+        }
+        void removeChannel(const std::string& channel) {
+          channels.erase(channel);
+        }
+        void addAction(const std::string& action, ActionOutput&& output) {
+          actions.erase(action);
+          actions.emplace(action, output);
+        }
+        void removeAction(const std::string& action) {
+          actions.erase(action);
+        }
+        void addFeedback(const std::string& control) {
           std::optional<ControlOutput> output = outputFromString(control);
           if (output) {
           feedbacks[output->path] = control;
@@ -64,27 +99,27 @@ class Mappings {
       private:
         template <typename T>
           void addFeedback(T controls) {
-            for (std::string control : controls) {
+            for (const std::string& control : controls) {
               addFeedback(control);
             }
           }
       public:
-        void addFeedbackForChannel(std::string channel) {
+        void addFeedbackForChannel(const std::string& channel) {
           addFeedback(config.controlsForChannel(channel));
         }
-        void addFeedbackForAction(std::string action) {
+        void addFeedbackForAction(const std::string& action) {
           addFeedback(config.controlsForAction(action));
         }
     };
     const Config& config;
-    GUI* gui;
+    std::shared_ptr<GUI> gui;
     std::vector<Mapping> mappings;
     size_t currentMappingIndex = 0;
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
 
     void refreshBank();
   public:
-    Mappings(const Config& config, GUI* gui);
+    Mappings(const Config& config, const std::shared_ptr<GUI>& gui);
     void write() {
       for (const Mapping& mapping : mappings) {
         mapping.write();

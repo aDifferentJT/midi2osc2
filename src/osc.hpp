@@ -117,7 +117,7 @@ class OSC : public Output {
       void send(std::string addressPattern, Args... args) { send(Message(addressPattern, args...)); }
     void setCallback(std::function<void(Message)> f) { callback = std::move(f); }
     void setCallback(std::function<void(std::string, float)> f) override { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
-    virtual std::pair<std::string, bool> merge(std::string channel, std::string action) const override;
+    std::pair<std::string, bool> merge(std::string channel, std::string action) const override;
 };
 
 #endif
