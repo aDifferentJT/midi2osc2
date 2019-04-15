@@ -1,17 +1,37 @@
-const socket = new WebSocket('ws://169.254.7.139:8080');
+var socket;
 
-socket.addEventListener('message', function (event) {
-  msg_rx(event.data);
-});
+function initial_load(){
+  var hostname = "";
 
-socket.onclose = function(event) {
-  update_status("Disconnected");
-  disable_controls();
-};
+  if(window.location.protocol=="file:"){
+    hostname = "localhost";
+  }else{
+    hostname = window.location.hostname;
+  }
 
-socket.onopen = function(event) {
-  update_status("Connected");
-};
+  document.getElementById("cnn-hostname").value = hostname;
+
+  connect(hostname);
+}
+
+function connect(hostname){
+  socket = new WebSocket(`ws://${hostname}:8080`);
+
+  socket.addEventListener('message', function (event) {
+    msg_rx(event.data);
+  });
+
+  socket.onclose = function(event) {
+    update_status("Disconnected");
+    disable_controls();
+    document.getElementById("cnn-form").className = "";
+  };
+
+  socket.onopen = function(event) {
+    update_status("Connected");
+    document.getElementById("cnn-form").className = "hidden";
+  };
+}
 
 function msg_rx(message) {
   var parts = message.split(":");
@@ -137,8 +157,8 @@ function edit_mode() {
 }
 
 function cancel_edit_mode() {
-  document.getElementById("editbox").className = "invisible";
-  document.getElementById("edit-ch-opt").className = "invisible";
+  document.getElementById("editbox").className = "hidden";
+  document.getElementById("edit-cg-opt").className = "hidden";
 
   in_edit_mode = 0;
 }
@@ -174,7 +194,7 @@ function channel_selection_changed() {
     document.getElementById("edit-cg-opt").className = "visible";
   } else {
     document.getElementById("edit-cg-opt").value = "";
-    document.getElementById("edit-cg-opt").className = "invisible";
+    document.getElementById("edit-cg-opt").className = "hidden";
   }
 }
 
