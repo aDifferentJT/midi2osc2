@@ -89,7 +89,7 @@ std::optional<Midi::MidiControl> Midi::Profile::catchIndicator(MidiControl c) {
 
 void Midi::setLed(uint8_t number, bool value) {
   if (isMock) {
-    config.gui->send("mockSetLed:" + profile.stringFromMidiControl({MidiControl::Type::Button, number}) + ":" + (value ? "true" : "false"));
+    config.gui.send("mockSetLed:" + profile.stringFromMidiControl({MidiControl::Type::Button, number}) + ":" + (value ? "true" : "false"));
   } else {
     std::vector<unsigned char> message({0x90, number, value ? (uint8_t)0x7F : (uint8_t)0x00});
     rtMidiOut.sendMessage(&message);
@@ -101,7 +101,7 @@ bool inBounds(T a, T b, T c) {
   return (a <= b && b <= c) || (a >= b && b >= c);
 }
 
-Midi::Midi(const std::string& deviceName, const std::string& profileFilename, const Config& config)
+Midi::Midi(const std::string& deviceName, const std::string& profileFilename, Config& config)
   : rtMidiIn(RtMidi::UNSPECIFIED, "midi2osc2")
   , rtMidiOut(RtMidi::UNSPECIFIED, "midi2osc2")
   , profile(profileFilename)

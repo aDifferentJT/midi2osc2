@@ -107,7 +107,7 @@ class Mappings {
           addFeedback(config.controlsForAction(action));
         }
     };
-    const Config& config;
+    Config& config;
     std::vector<Mapping> mappings;
     std::size_t currentMappingIndex = 0;
     Mapping& currentMapping() { return mappings[currentMappingIndex]; }
@@ -119,7 +119,7 @@ class Mappings {
     void guiOpenCallback();
     void guiRecvCallback(const std::string& str);
   public:
-    Mappings(const Config& config);
+    Mappings(Config& config);
     void write() {
       for (const Mapping& mapping : mappings) {
         mapping.write();

@@ -97,16 +97,16 @@ std::string Mappings::Mapping::encodedMappingOf(const std::string& controlName) 
 void Mappings::refreshBank() {
   config.midi->setLed(config.bankLeft, currentMappingIndex > 0);
   config.midi->setLed(config.bankRight, currentMappingIndex < mappings.size() - 1);
-  config.gui->send("bank:" + std::to_string(currentMappingIndex));
+  config.gui.send("bank:" + std::to_string(currentMappingIndex));
   if (currentMappingIndex > 0) {
-    config.gui->send("enableBank:left");
+    config.gui.send("enableBank:left");
   } else {
-    config.gui->send("disableBank:left");
+    config.gui.send("disableBank:left");
   }
   if (currentMappingIndex < mappings.size() - 1) {
-    config.gui->send("enableBank:right");
+    config.gui.send("enableBank:right");
   } else {
-    config.gui->send("disableBank:right");
+    config.gui.send("disableBank:right");
   }
 }
 
@@ -126,7 +126,7 @@ void Mappings::midiCallback(Midi::Event event) {
     if (control) {
       config.outputs.at(control->output)->send(control->path, control->inverted ? 1.0 - event.value : event.value);
     }
-    config.gui->send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + currentMapping().encodedMappingOf(event.control));
+    config.gui.send("moved:" + event.control + ":" + std::to_string(event.value) + ":" + currentMapping().encodedMappingOf(event.control));
   }
 }
 
@@ -144,9 +144,9 @@ void Mappings::guiOpenCallback() {
   for (auto& output : config.outputs) {
     devices += ":" + output.first;
   }
-  config.gui->send(devices);
+  config.gui.send(devices);
   if (config.midi->isMock) {
-    config.gui->send("mock");
+    config.gui.send("mock");
   }
 }
 
@@ -191,7 +191,7 @@ void Mappings::guiRecvCallback(const std::string& str) {
     currentMapping().removeAction(action);
     currentMapping().addFeedbackForAction(action);
   } else if (command == "echo") {
-    config.gui->send(str);
+    config.gui.send(str);
   } else if (command == "bankChange") {
     std::size_t directionStart = commandEnd + 1;
     std::size_t directionEnd = str.find(':', directionStart);
@@ -213,7 +213,7 @@ void Mappings::guiRecvCallback(const std::string& str) {
     refreshBank();
     if (!controlName.empty()) {
       //send the named control data again after the bank switch has been made
-      config.gui->send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
+      config.gui.send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
     }
   } else if (command == "mockMoved") {
     std::size_t controlStart = commandEnd + 1;
@@ -229,7 +229,7 @@ void Mappings::guiRecvCallback(const std::string& str) {
   write();
 }
 
-Mappings::Mappings(const Config& config)
+Mappings::Mappings(Config& config)
   : config(config)
 {
   refreshBank();
@@ -237,8 +237,8 @@ Mappings::Mappings(const Config& config)
   for (auto& output : config.outputs) {
     output.second->setCallback(bindMember(&Mappings::outputCallback, this));
   }
-  config.gui->setOpenCallback(bindMember(&Mappings::guiOpenCallback, this));
-  config.gui->setRecvCallback(bindMember(&Mappings::guiRecvCallback, this));
+  config.gui.setOpenCallback(bindMember(&Mappings::guiOpenCallback, this));
+  config.gui.setRecvCallback(bindMember(&Mappings::guiRecvCallback, this));
   std::transform(config.banks.begin(), config.banks.end(), std::back_inserter(mappings),
                  [this](std::string filename) -> Mapping {
                    Mapping mapping(this->config, filename);

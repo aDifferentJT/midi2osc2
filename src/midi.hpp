@@ -53,13 +53,13 @@ class Midi {
     std::unordered_map<uint8_t, FaderState> faderStates;
     Profile profile;
 
-    const Config& config;
+    Config& config;
 
     void setLed(uint8_t number, bool value);
   public:
     const bool isMock;
 
-    Midi(const std::string& deviceName, const std::string& profileFilename, const Config& config);
+    Midi(const std::string& deviceName, const std::string& profileFilename, Config& config);
     void feedback(const std::string& controlS, float v);
     void setCallback(std::function<void(Event)> f) { callback = std::move(f); }
 

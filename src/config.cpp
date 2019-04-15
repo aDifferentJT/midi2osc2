@@ -1,14 +1,13 @@
 #include "config.hpp"
 #include <fstream>     // for size_t, ifstream, operator<<, basic_ostream, endl
 #include <iostream>    // for cerr
-#include "gui.hpp"     // for GUI
 #include "midi.hpp"    // for Midi
 #include "osc.hpp"     // for OSC
 #include "output.hpp"  // for Output
 namespace asio { class io_context; }
 #include <fstream> // IWYU pragma: keep
 
-Config::Config(asio::io_context& io_context, const std::string& filename) : gui(std::make_shared<GUI>(io_context)) {
+Config::Config(asio::io_context& io_context, const std::string& filename) : gui(io_context) {
   std::ifstream f(filename);
   while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
     std::string str;
