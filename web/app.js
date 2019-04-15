@@ -6,10 +6,12 @@ socket.addEventListener('message', function (event) {
 
 socket.onclose = function(event) {
   update_status("Disconnected");
+  disable_controls();
 };
 
 socket.onopen = function(event) {
   update_status("Connected");
+  enable_bankswitch();
 };
 
 function msg_rx(message) {
@@ -17,11 +19,13 @@ function msg_rx(message) {
   if (parts[0] == "moved") {
     update_control(parts);
   } else if (parts[0] == "bank") {
-    update_status(`Bank ${parts[1]}`);
+    update_bank(parts);
   } else if (parts[0] == "devices") {
     update_devices(parts.slice(1));
   } else if (parts[0] == "echo") {
     chat_rx(message);
+  } else if (parts[0] == "disableBank"){
+    disable_bank(parts);
   }
 }
 
@@ -62,6 +66,23 @@ function update_control(parts) {
 
 function update_status(status) {
   document.getElementById("status").innerHTML = status;
+}
+
+function update_bank(parts){
+  update_status(`Bank ${parts[1]}`);
+  document.getElementById("enteredit").disabled = true;
+}
+
+function disable_controls(){
+  ["bank-left", "bank-right", "enteredit"].forEach(control => {
+    document.getElementById(control).disabled = true;
+  });
+}
+
+function enable_bankswitch(){
+  ["bank-left", "bank-right"].forEach(control => {
+    document.getElementById(control).disabled = false;
+  });
 }
 
 function update_devices(devices) {
@@ -206,4 +227,18 @@ function chat_tx(){
   var txt = document.getElementById("chat-send");
   socket.send(`echo:${txt.value}`);
   txt.value="";
+}
+
+function bank_change(direction){
+  socket.send(`bankChange:${direction}:${lastmovedcontrol}`)
+}
+
+function disable_bank(parts){
+  if(parts[1] == "left"){
+    document.getElementById("bank-left").disabled = true;
+    document.getElementById("bank-right").disabled = false;
+  }else if(parts[1]=="right"){
+    document.getElementById("bank-right").disabled = true;
+    document.getElementById("bank-left").disabled = false;
+  }
 }
