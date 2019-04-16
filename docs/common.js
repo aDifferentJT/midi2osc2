@@ -30,12 +30,9 @@ function includeHTML(callback) {
 function setNavItemActive() {
   var z, i, elmnt;
   z = document.getElementsByClassName("nav-item");
-  console.log(z.length);
   for (i = 0; i < z.length; i++) {
     elmnt = z[i];
-    var path_elements = window.location.pathname.split("/");
-    var file_name = path_elements[path_elements.length - 1]
-    if (elmnt.firstChild.getAttribute("href") == file_name) {
+    if (window.location.pathname.endsWith(elmnt.firstChild.getAttribute("href"))) {
       elmnt.className = "nav-item active";
     }
   }

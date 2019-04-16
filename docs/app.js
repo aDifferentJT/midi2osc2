@@ -66,6 +66,10 @@ function connect() {
   };
 }
 
+function close() {
+  socket.close();
+}
+
 function msg_rx(message) {
   var parts = message.split(":");
   if (parts[0] == "moved") {
