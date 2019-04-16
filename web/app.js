@@ -3,10 +3,10 @@ var hostname = "";
 var connectId = -1;
 var connected = false;
 
-function initial_load(){
-  if(window.location.protocol=="file:"){
+function initial_load() {
+  if (window.location.protocol == "file:") {
     hostname = "localhost";
-  }else{
+  } else {
     hostname = window.location.hostname;
   }
 
@@ -15,7 +15,7 @@ function initial_load(){
   connectId = setInterval(connect, 1000);
 }
 
-function connect_form(){
+function connect_form() {
   if(!connected){
     //terminate any existing connection attempts
     socket.close();
@@ -29,7 +29,7 @@ function connect_form(){
 }
 
 function connect() {
-  if(connected){
+  if (connected) {
     return;
   }
   socket = new WebSocket(`ws://${hostname}:8080`);
