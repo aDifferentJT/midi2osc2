@@ -2,13 +2,15 @@ var socket;
 var hostname = "";
 var connectId = -1;
 var connected = false;
-
+var attempt_connect = false;
 function initial_load() {
   if (window.location.protocol == "file:") {
     hostname = "localhost";
+    attempt_connect = true;
   } else {
     if(guessServerHostname()){
       hostname = window.location.hostname;
+      attempt_connect = true;
     }
   }
 
@@ -22,6 +24,7 @@ function connect_form() {
     //terminate any existing connection attempts
     socket.close();
     hostname = document.getElementById('cnn-hostname').value;
+    attempt_connect = true;
     show_spinners();
 
     clearInterval(connectId);
@@ -34,6 +37,11 @@ function connect() {
   if (connected) {
     return;
   }
+
+  if (!attempt_connect) {
+    return;
+  }
+
   socket = new WebSocket(`ws://${hostname}:8080`);
 
   socket.addEventListener('message', function (event) {
