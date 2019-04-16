@@ -9,109 +9,111 @@
       <h1><span id="status">Disconnected</span></h1>
       <div id="cnn-form" class="">
         <h1>Connection Information</h1>
-        <form action="#" onsubmit="hostname = document.getElementById('cnn-hostname').value; return false;">
+        <form action="#" onsubmit="connect_form();">
           Server Hostname: <input id="cnn-hostname" />
           <button type="submit" class="btn btn-success">Connect</button>
         </form>
         <hr />
       </div>
-      <div class="row">
-        <div class="col-2">
-          <button class="btn btn-secondary" id="bank-left" disabled="" onclick="bank_change('left')">Bank Left</button>
+      <div id="spinner1" class="hidden"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>
+      <div id="main" class="hidden">
+        <div class="row">
+          <div class="col-2">
+            <button class="btn btn-secondary" id="bank-left" disabled="" onclick="bank_change('left')">Bank Left</button>
+          </div>
+          <div class="col-2">
+            <button class="btn btn-secondary" id="bank-right" disabled="" onclick="bank_change('right')">Bank Right</button>
+          </div>
         </div>
-        <div class="col-2">
-          <button class="btn btn-secondary" id="bank-right" disabled="" onclick="bank_change('right')">Bank Right</button>
-        </div>
-      </div>
-      <hr />
-      <h2>Last Moved Control</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Value</th>
-            <th>Device</th>
-            <th>Output</th>
-            <th>Inverted</th>
-            <th>Channel</th>
-            <th>Ch Device</th>
-            <th>Ch Output</th>
-            <th>Action</th>
-            <th>Action Output</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span id="movedcontrol"/></td>
-            <td><span id="movedcontrolvalue"/></td>
-            <td><span id="movedcontroldevice"/></td>
-            <td><span id="movedcontroloutput"/></td>
-            <td><span id="movedcontrolinverted"/></td>
-            <td><span id="movedcontrolchannel"/></td>
-            <td><span id="movedcontrolcgdevice"/></td>
-            <td><span id="movedcontrolcgoutput"/></td>
-            <td><span id="movedcontrolaction"/></td>
-            <td><span id="movedcontrolagoutput"/></td>
-          </tr>
-        </tbody>
-      </table>
-      <br/>
-      <div id="preeditbox"><button id="enteredit" onclick="edit_mode()" class="btn btn-primary" disabled="">Enter Edit Mode</button><br/><br/></div>
-      <div id="editbox" class="hidden">
-        <hr/>
-        <h3>Edit control <span id="editcontrol"/></h3>
-        <form action="#" onsubmit="set_control_output()">
-          <div class="row">
-            <div class="col-8">
-              <select placeholder="Device" id="edit-device"></select>
-              <input id="edit-output" placeholder="Output"/>
-              Inv: <input id="edit-inverted" title="Inverted" type="checkbox"/>
-            </div>
-            <div class="col-3">
-              <button type="submit" class="btn btn-primary">Apply</button>
-              <button type="reset" onclick="clear_output()" class="btn btn-danger">Clear</button>
-            </div>
-          </div>
-        </form>
-        <hr/>
-        <h3>Edit channel <span id="editchannel"/></h3>
-        <form action="#" onsubmit="set_channel()">
-          <div class="row">
-            <div class="col-8">
-              <select id="edit-cg-device" placeholder="Channel Device"></select>
-              <select onchange="channel_selection_changed()" id="edit-cg-sel">
-                <option value="input">Input</option>
-                <option value="aux">Aux</option>
-                <option value="lr">LR</option>
-              </select>
-              <input id="edit-cg-opt" placeholder="Input Number" class="hidden"/>
-            </div>
-            <div class="col-3">
-              <button type="submit" class="btn btn-primary">Apply</button>
-              <button type="reset" onclick="clear_channel()" class="btn btn-danger">Clear</button>
-            </div>
-          </div>
-        </form>
-        <hr/>
-        <h3>Edit action <span id="editaction"/></h3>
-        <form action="#" onsubmit="set_action()">
-          <div class="row">
-            <div class="col-8">
-              <select id="edit-action">
-                <option value="fader">Fader</option>
-                <option value="mute">Mute</option>
-                <option value="on">On</option>
-                <option value="gain">Gain</option>
-              </select>
-            </div>
-            <div class="col-3">
-              <button type="submit" class="btn btn-primary">Apply</button>
-              <button type="reset" onclick="clear_action()" class="btn btn-danger">Clear</button>
-            </div>
-          </div>
-        </form>
+        <hr />
+        <h2>Last Moved Control</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Value</th>
+              <th>Device</th>
+              <th>Output</th>
+              <th>Inverted</th>
+              <th>Channel</th>
+              <th>Ch Device</th>
+              <th>Ch Output</th>
+              <th>Action</th>
+              <th>Action Output</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span id="movedcontrol"/></td>
+              <td><span id="movedcontrolvalue"/></td>
+              <td><span id="movedcontroldevice"/></td>
+              <td><span id="movedcontroloutput"/></td>
+              <td><span id="movedcontrolinverted"/></td>
+              <td><span id="movedcontrolchannel"/></td>
+              <td><span id="movedcontrolcgdevice"/></td>
+              <td><span id="movedcontrolcgoutput"/></td>
+              <td><span id="movedcontrolaction"/></td>
+              <td><span id="movedcontrolagoutput"/></td>
+            </tr>
+          </tbody>
+        </table>
         <br/>
-        <button onclick="cancel_edit_mode()" class="btn btn-warning">Cancel Edit Mode</button>
+        <div id="editmode-button"><button id="enteredit" onclick="edit_mode()" class="btn btn-primary" disabled="">Enter Edit Mode</button><br/><br/></div>
+        <div id="editbox" class="hidden">
+          <button onclick="cancel_edit_mode()" class="btn btn-warning">Cancel Edit Mode</button><br /><br />
+          <hr/>
+          <h3>Edit control <span id="editcontrol"/></h3>
+          <form action="#" onsubmit="set_control_output()">
+            <div class="row">
+              <div class="col-8">
+                <select placeholder="Device" id="edit-device"></select>
+                <input id="edit-output" placeholder="Output"/>
+                Inv: <input id="edit-inverted" title="Inverted" type="checkbox"/>
+              </div>
+              <div class="col-3">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <button type="reset" onclick="clear_output()" class="btn btn-danger">Clear</button>
+              </div>
+            </div>
+          </form>
+          <hr/>
+          <h3>Edit channel <span id="editchannel"/></h3>
+          <form action="#" onsubmit="set_channel()">
+            <div class="row">
+              <div class="col-8">
+                <select id="edit-cg-device" placeholder="Channel Device"></select>
+                <select onchange="channel_selection_changed()" id="edit-cg-sel">
+                  <option value="input">Input</option>
+                  <option value="aux">Aux</option>
+                  <option value="lr">LR</option>
+                </select>
+                <input id="edit-cg-opt" placeholder="Input Number" class="hidden"/>
+              </div>
+              <div class="col-3">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <button type="reset" onclick="clear_channel()" class="btn btn-danger">Clear</button>
+              </div>
+            </div>
+          </form>
+          <hr/>
+          <h3>Edit action <span id="editaction"/></h3>
+          <form action="#" onsubmit="set_action()">
+            <div class="row">
+              <div class="col-8">
+                <select id="edit-action">
+                  <option value="fader">Fader</option>
+                  <option value="mute">Mute</option>
+                  <option value="on">On</option>
+                  <option value="gain">Gain</option>
+                </select>
+              </div>
+              <div class="col-3">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <button type="reset" onclick="clear_action()" class="btn btn-danger">Clear</button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
       <br/><br/><br/>
       <div id="mock-div" class="pullbottom hidden">

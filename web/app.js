@@ -15,29 +15,53 @@ function initial_load(){
   connectId = setInterval(connect, 1000);
 }
 
+function connect_form(){
+  if(!connected){
+    //terminate any existing connection attempts
+    socket.close();
+    hostname = document.getElementById('cnn-hostname').value;
+    show_spinners();
+
+    clearInterval(connectId);
+    connectId = setInterval(connect, 1000);
+  }
+  return false;
+}
+
 function connect() {
+  if(connected){
+    return;
+  }
   socket = new WebSocket(`ws://${hostname}:8080`);
 
   socket.addEventListener('message', function (event) {
     msg_rx(event.data);
   });
 
-  socket.onclose = function(event) {
-    update_status("Disconnected");
-    disable_controls();
-    document.getElementById("cnn-form").className = "";
-    if (connected) {
-      connected = false;
-      clearInterval(connectId);
-      connectId = setInterval(connect, 1000);
-    }
-  };
-
   socket.onopen = function(event) {
+    connected = true;
     clearInterval(connectId);
     update_status("Connected");
     document.getElementById("cnn-form").className = "hidden";
-    connected = true;
+    document.getElementById("main").className="";
+    hide_spinners();
+
+    //register on close after on openned
+    socket.onclose = function(event) {
+      update_status("Disconnected");
+      console.log("disconnect shown");
+      //clear any active edits to ensure that if a reconnect occurs, sync issues do not occur.
+      cancel_edit_mode();
+      disable_controls();
+      document.getElementById("cnn-form").className = "";
+      if (connected) {
+        connected = false;
+        clearInterval(connectId);
+        connectId = setInterval(connect, 1000);
+        show_spinners();
+        document.getElementById("main").className="hidden";
+      }
+    };
   };
 }
 
@@ -106,6 +130,7 @@ function update_status(status) {
 function update_bank(parts){
   update_status(`Bank ${parts[1]}`);
   document.getElementById("enteredit").disabled = true;
+  cancel_edit_mode();
 }
 
 function disable_controls(){
@@ -117,6 +142,18 @@ function disable_controls(){
 function enable_bankswitch(){
   ["bank-left", "bank-right"].forEach(control => {
     document.getElementById(control).disabled = false;
+  });
+}
+
+function show_spinners(){
+  ["spinner1"].forEach(control => {
+    document.getElementById(control).className = "";
+  });
+}
+
+function hide_spinners(){
+  ["spinner1"].forEach(control => {
+    document.getElementById(control).className = "hidden";
   });
 }
 
@@ -159,6 +196,7 @@ function edit_mode() {
   document.getElementById("edit-cg-device").value = document.getElementById("movedcontrolcgdevice").innerHTML;
   var chparams = document.getElementById("movedcontrolcgoutput").innerHTML.split("$");
   document.getElementById("edit-cg-sel").value = chparams[0];
+  channel_selection_changed();
   if (chparams.length>1) {
     document.getElementById("edit-cg-opt").value = chparams[1];
   } else {
@@ -168,12 +206,13 @@ function edit_mode() {
   document.getElementById("edit-action").value = document.getElementById("movedcontrolagoutput").innerHTML;
 
   document.getElementById("editbox").className = "show";
+  document.getElementById("editmode-button").className = "hidden";
 }
 
 function cancel_edit_mode() {
   document.getElementById("editbox").className = "hidden";
   document.getElementById("edit-cg-opt").className = "hidden";
-
+  document.getElementById("editmode-button").className = "show";
   in_edit_mode = 0;
 }
 
@@ -255,6 +294,7 @@ function clear_action() {
 }
 
 function chat_rx(full_msg) {
+  document.getElementById("chatdiv").className="pullbottom";
   document.getElementById("chat").innerHTML = full_msg.substring(full_msg.indexOf("echo:")+5);
 }
 
@@ -289,4 +329,3 @@ function mock_moved() {
 function mock_set_led(control, value) {
   document.getElementById("mock-led").innerHTML = `LED ${control}: ${value}`;
 }
-
