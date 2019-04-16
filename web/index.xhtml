@@ -1,11 +1,19 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>midi2osc</title>
-    <link rel="stylesheet" href="app.css"/>
-    <link rel="stylesheet" href="bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="app.css"/>
+    <link type="text/css" rel="stylesheet" href="common.css"/>
+    <link type="text/css" rel="stylesheet" href="bootstrap.min.css"/>
+    <script src="jquery.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script src="common.js"></script>
   </head>
   <body>
-    <div class="container">
+    <div include="navbar.xhtml"></div>
+    <div class="container bodypadding">
       <h1><span id="status">Disconnected</span></h1>
       <div id="cnn-form" class="">
         <h1>Connection Information</h1>
@@ -131,9 +139,12 @@
           <input id="chat-send"></input>
         </form>
       </div>
-      <script src="app.js"></script>
       <script>
-        initial_load();
+        includeHTML(() => {
+          setNavItemActive();
+        });
+initial_load();
       </script>
+    </div>
   </body>
 </html>
