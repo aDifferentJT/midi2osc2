@@ -17,7 +17,7 @@ function includeHTML(callback) {
           elmnt.removeAttribute("include");
           includeHTML(callback);
         }
-      } 
+      }
       xhttp.open("GET", file, true);
       xhttp.send();
       /* Exit the function: */
@@ -33,12 +33,10 @@ function setNavItemActive() {
   console.log(z.length);
   for (i = 0; i < z.length; i++) {
     elmnt = z[i];
-    console.log(window.location.href);
-    console.log(window.location.pathname);
-    if (elmnt.firstChild.getAttribute("href") == window.location.pathname) {
-      console.log("hi");
+    var path_elements = window.location.pathname.split("/");
+    var file_name = path_elements[path_elements.length - 1]
+    if (elmnt.firstChild.getAttribute("href") == file_name) {
       elmnt.className = "nav-item active";
     }
   }
 }
-
