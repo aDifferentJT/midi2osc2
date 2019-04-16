@@ -40,8 +40,8 @@ function setNavItemActive() {
         break;
       case "nav-item dropdown":
         dropdownElmnts = elmnt.getElementsByClassName("dropdown-item")
-        for (i = 0; i < dropdownElmnts.length; i++) {
-          dropdownElmnt = dropdownElmnts[i];
+        for (j = 0; j < dropdownElmnts.length; j++) {
+          dropdownElmnt = dropdownElmnts[j];
           if (window.location.pathname.endsWith(dropdownElmnt.getAttribute("href"))) {
             elmnt.className = "nav-item dropdown active";
           }
