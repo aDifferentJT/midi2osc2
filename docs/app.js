@@ -21,8 +21,10 @@ function initial_load() {
 
 function connect_form() {
   if(!connected){
-    //terminate any existing connection attempts
-    socket.close();
+    if(attempt_connect){
+      //terminate any existing connection attempts
+      socket.close();
+    }
     hostname = document.getElementById('cnn-hostname').value;
     attempt_connect = true;
     show_spinners();
