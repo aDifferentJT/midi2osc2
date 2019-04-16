@@ -7,7 +7,9 @@ function initial_load() {
   if (window.location.protocol == "file:") {
     hostname = "localhost";
   } else {
-    hostname = window.location.hostname;
+    if(guessServerHostname()){
+      hostname = window.location.hostname;
+    }
   }
 
   document.getElementById("cnn-hostname").value = hostname;
