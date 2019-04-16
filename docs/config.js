@@ -1,0 +1,3 @@
+function guessServerHostname(){
+  return true;
+}

@@ -17,7 +17,7 @@ function includeHTML(callback) {
           elmnt.removeAttribute("include");
           includeHTML(callback);
         }
-      } 
+      }
       xhttp.open("GET", file, true);
       xhttp.send();
       /* Exit the function: */
@@ -50,4 +50,3 @@ function setNavItemActive() {
     }
   }
 }
-
