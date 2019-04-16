@@ -1,8 +1,9 @@
 var socket;
+var hostname = "";
+var connectId = -1;
+var connected = false;
 
 function initial_load(){
-  var hostname = "";
-
   if(window.location.protocol=="file:"){
     hostname = "localhost";
   }else{
@@ -11,10 +12,10 @@ function initial_load(){
 
   document.getElementById("cnn-hostname").value = hostname;
 
-  connect(hostname);
+  connectId = setInterval(connect, 1000);
 }
 
-function connect(hostname){
+function connect() {
   socket = new WebSocket(`ws://${hostname}:8080`);
 
   socket.addEventListener('message', function (event) {
@@ -25,11 +26,18 @@ function connect(hostname){
     update_status("Disconnected");
     disable_controls();
     document.getElementById("cnn-form").className = "";
+    if (connected) {
+      connected = false;
+      clearInterval(connectId);
+      connectId = setInterval(connect, 1000);
+    }
   };
 
   socket.onopen = function(event) {
+    clearInterval(connectId);
     update_status("Connected");
     document.getElementById("cnn-form").className = "hidden";
+    connected = true;
   };
 }
 
@@ -270,11 +278,9 @@ function enable_bank(bank, value) {
 
 function enable_mock() {
   document.getElementById("mock-div").className = "show";
-  console.log("Shown mock");
 }
 
 function mock_moved() {
-  console.log("moved");
   control = document.getElementById("mock-moved-control").value;
   value = document.getElementById("mock-moved-value").value;
   socket.send(`mockMoved:${control}:${value}`);
