@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>midi2osc</title>
+    <link type="text/css" rel="stylesheet" href="common.css"/>
+    <link type="text/css" rel="stylesheet" href="bootstrap.min.css"/>
+    <script src="jquery.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="common.js"></script>
+  </head>
+  <body>
+    <div include="navbar.xhtml"></div>
+    <div class="container bodypadding">
+      <h1>Remapping controls</h1>
+      <p>
+      To remap a control, go into the <a href="index.xhtml">Control Panel</a> and make sure that it has connected, if not see <a href="troubleshooting.xhtml">Troubleshooting</a>.
+      </p><p>
+      Then move the control on the midi controller, this should cause the control's data to be filled out in the "Last Moved Control" table as follows:
+      </p>
+      <table class="table" style="table-layout:fixed">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Value</th>
+            <th>Device</th>
+            <th>Output</th>
+            <th>Inverted</th>
+            <th>Channel</th>
+            <th>Ch Device</th>
+            <th>Ch Output</th>
+            <th>Action</th>
+            <th>Action Output</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="word-wrap:break-word">The name of the control</td>
+            <td style="word-wrap:break-word">The value of the control</td>
+            <td style="word-wrap:break-word">The output device to which the control has been mapped</td>
+            <td style="word-wrap:break-word">The path to which the control has been mapped</td>
+            <td style="word-wrap:break-word">Whether the control is inverted</td>
+            <td style="word-wrap:break-word">The channel group of which the control is a part</td>
+            <td style="word-wrap:break-word">The output device to which the channel group has been mapped</td>
+            <td style="word-wrap:break-word">The type of the channel to which the channel group has been mapped</td>
+            <td style="word-wrap:break-word">The action group of which the control is a part</td>
+            <td style="word-wrap:break-word">The type of the action to which the action group has been mapped</td>
+          </tr><tr>
+            <td colspan=2 align="center">Always filled</td>
+            <td colspan=3 align="center">Only filled if control individually mapped</td>
+            <td colspan=1 align="center">Always filled</td>
+            <td colspan=2 align="center">Only filled if channel mapped</td>
+            <td colspan=1 align="center">Always filled</td>
+            <td colspan=1 align="center">Only filled if action mapped</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+      After selecting the desired control click "Enter Edit Mode" to begin editing, then you can set the mapping for the control, the channel or the action as described in <a href="intro.xhtml">Introduction</a>
+      </p>
+      <script>
+        includeHTML(() => {
+          setNavItemActive();
+        });
+      </script>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>midi2osc</title>
+    <link type="text/css" rel="stylesheet" href="common.css"/>
+    <link type="text/css" rel="stylesheet" href="bootstrap.min.css"/>
+    <script src="jquery.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="common.js"></script>
+  </head>
+  <body>
+    <div include="navbar.xhtml"></div>
+    <div class="container bodypadding">
+      <h1>Introduction</h1>
+      <p>
+      midi2osc2 is a program for mapping controls on a Midi controller to OSC paths. It also supports bank switching and multiple outputs.
+      </p><p>
+      Each control on the midi controller is part of both a channel group and an action group. Channel groups can be mapped to various types of channel and action groups can be mapped to various types of actions. As well as this individual controls can be mapped to OSC paths and potentially inverted.
+      </p><p>
+      When a control is moved on the midi controller then if the control has an individual mapping then that is used, otherwise, if the control's channel group and action's group both have mappings then they are combined and the resulting output path used, otherwise the control is ignored.
+      </p>
+      <script>
+        includeHTML(() => {
+          setNavItemActive();
+        });
+      </script>
+    </div>
+  </body>
+</html>

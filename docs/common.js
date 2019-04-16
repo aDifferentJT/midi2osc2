@@ -28,12 +28,25 @@ function includeHTML(callback) {
 }
 
 function setNavItemActive() {
-  var z, i, elmnt;
-  z = document.getElementsByClassName("nav-item");
-  for (i = 0; i < z.length; i++) {
-    elmnt = z[i];
-    if (window.location.pathname.endsWith(elmnt.firstChild.getAttribute("href"))) {
-      elmnt.className = "nav-item active";
+  var elmnts, i, elmnt, dropdownElmnts, dropdownElmnt;
+  elmnts = document.getElementsByClassName("nav-item");
+  for (i = 0; i < elmnts.length; i++) {
+    elmnt = elmnts[i];
+    switch (String(elmnt.className)) {
+      case "nav-item":
+        if (window.location.pathname.endsWith(elmnt.firstChild.getAttribute("href"))) {
+          elmnt.className = "nav-item active";
+        }
+        break;
+      case "nav-item dropdown":
+        dropdownElmnts = elmnt.getElementsByClassName("dropdown-item")
+        for (i = 0; i < dropdownElmnts.length; i++) {
+          dropdownElmnt = dropdownElmnts[i];
+          if (window.location.pathname.endsWith(dropdownElmnt.getAttribute("href"))) {
+            elmnt.className = "nav-item active";
+          }
+        }
+        break;
     }
   }
 }
