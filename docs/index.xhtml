@@ -11,7 +11,7 @@
     <script src="app.js"></script>
     <script src="common.js"></script>
   </head>
-  <body>
+  <body onbeforeunload="close(); return false;">
     <div include="navbar.xhtml"></div>
     <div class="container bodypadding">
       <h1><span id="status">Disconnected</span></h1>
