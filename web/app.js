@@ -53,6 +53,7 @@ function connect() {
       //clear any active edits to ensure that if a reconnect occurs, sync issues do not occur.
       cancel_edit_mode();
       disable_controls();
+      disable_mock();
       document.getElementById("cnn-form").className = "";
       if (connected) {
         connected = false;
@@ -318,6 +319,10 @@ function enable_bank(bank, value) {
 
 function enable_mock() {
   document.getElementById("mock-div").className = "show";
+}
+
+function disable_mock() {
+  document.getElementById("mock-div").className = "hidden";
 }
 
 function mock_moved() {
