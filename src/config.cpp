@@ -1,6 +1,7 @@
 #include "config.hpp"
 #include <fstream>     // for size_t, ifstream, operator<<, basic_ostream, endl
 #include <iostream>    // for cerr
+#include <cctype>      // for isspace
 #include "midi.hpp"    // for Midi
 #include "osc.hpp"     // for OSC
 #include "output.hpp"  // for Output
@@ -10,6 +11,7 @@ namespace asio { class io_context; }
 Config::Config(asio::io_context& io_context, const std::string& filename) : gui(io_context) {
   std::ifstream f(filename);
   while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
+    while (std::isspace(f.peek())) { f.ignore(); }
     std::string str;
     std::getline(f, str);
     if (str.empty() || str.substr(0, 2) == "//") {
@@ -77,6 +79,10 @@ Config::Config(asio::io_context& io_context, const std::string& filename) : gui(
     } else {
       std::cerr << "Cannot parse line: " << str << std::endl;
     }
+  }
+  if (!midi) {
+    std::cerr << "No midi device given in config file" << std::endl;
+    throw;
   }
 }
 
