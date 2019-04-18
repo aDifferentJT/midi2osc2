@@ -56,6 +56,8 @@ class Midi {
     Config& config;
 
     void setLed(uint8_t number, bool value);
+
+    static void midiCallback(double timeStamp, std::vector<unsigned char>* message, void* userData);
   public:
     const bool isMock;
 

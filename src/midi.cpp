@@ -101,6 +101,53 @@ bool inBounds(T a, T b, T c) {
   return (a <= b && b <= c) || (a >= b && b >= c);
 }
 
+void Midi::midiCallback(double timeStamp, std::vector<unsigned char>* message, void* userData) {
+  (void)timeStamp;
+  Midi* midi = static_cast<Midi*>(userData);
+  MidiEvent event(*message);
+  std::string control = midi->profile.stringFromMidiControl(event.control);
+  float value;
+  switch (event.control.type) {
+    case MidiControl::Type::Button:
+      if (control == midi->config.bankLeft || control == midi->config.bankRight) {
+        value = std::get<bool>(event.value) ? 1.0 : 0.0;
+      } else {
+        if (std::get<bool>(event.value)) {
+          try {
+            midi->buttonStates[event.control.number] = !midi->buttonStates.at(event.control.number);
+          } catch (std::out_of_range&) {
+            midi->buttonStates[event.control.number] = true;
+          }
+        }
+        value = midi->buttonStates[event.control.number] ? 1.0 : 0.0;
+        midi->setLed(event.control.number, value >= 0.5);
+      }
+      midi->callback({control, value});
+      break;
+    case MidiControl::Type::Fader:
+      value = static_cast<float>(std::get<uint8_t>(event.value)) / 127.0;
+      try {
+        FaderState state = midi->faderStates.at(event.control.number);
+        if (state.received
+            && !((state.moved && inBounds(value, *state.received, *state.moved))
+                 || fabsf(value - *state.received) < 0.01)) {
+          midi->faderStates[event.control.number] = {value, state.received};
+        } else {
+          midi->faderStates[event.control.number] = {value, std::nullopt};
+        }
+      } catch (std::out_of_range&) {
+        midi->faderStates[event.control.number] = {value, std::nullopt};
+      }
+      if (std::optional<MidiControl> indicator = midi->profile.catchIndicator(event.control)) {
+        midi->setLed(indicator->number, midi->faderStates.at(event.control.number).received.has_value());
+      }
+      if (!midi->faderStates.at(event.control.number).received.has_value()) {
+        midi->callback({control, value});
+      }
+      break;
+  }
+}
+
 Midi::Midi(const std::string& deviceName, const std::string& profileFilename, Config& config)
   : rtMidiIn(RtMidi::UNSPECIFIED, "midi2osc2")
   , rtMidiOut(RtMidi::UNSPECIFIED, "midi2osc2")
@@ -123,52 +170,7 @@ Midi::Midi(const std::string& deviceName, const std::string& profileFilename, Co
     }
     rtMidiIn.openPort(portNumber);
     rtMidiOut.openPort(portNumber);
-    rtMidiIn.setCallback([](double timeStamp, std::vector<unsigned char>* message, void* userData){
-      (void)timeStamp;
-      Midi* midi = static_cast<Midi*>(userData);
-      MidiEvent event(*message);
-      std::string control = midi->profile.stringFromMidiControl(event.control);
-      float value;
-      switch (event.control.type) {
-        case MidiControl::Type::Button:
-          if (control == midi->config.bankLeft || control == midi->config.bankRight) {
-            value = std::get<bool>(event.value) ? 1.0 : 0.0;
-          } else {
-            if (std::get<bool>(event.value)) {
-              try {
-                midi->buttonStates[event.control.number] = !midi->buttonStates.at(event.control.number);
-              } catch (std::out_of_range&) {
-                midi->buttonStates[event.control.number] = true;
-              }
-            }
-            value = midi->buttonStates[event.control.number] ? 1.0 : 0.0;
-            midi->setLed(event.control.number, value >= 0.5);
-          }
-          midi->callback({control, value});
-          break;
-        case MidiControl::Type::Fader:
-          value = static_cast<float>(std::get<uint8_t>(event.value)) / 127.0;
-          try {
-            FaderState state = midi->faderStates.at(event.control.number);
-            if (state.received
-                && !((state.moved && inBounds(value, *state.received, *state.moved))
-                     || fabsf(value - *state.received) < 0.01)) {
-              midi->faderStates[event.control.number] = {value, state.received};
-            } else {
-              midi->faderStates[event.control.number] = {value, std::nullopt};
-            }
-          } catch (std::out_of_range&) {
-            midi->faderStates[event.control.number] = {value, std::nullopt};
-          }
-          if (std::optional<MidiControl> indicator = midi->profile.catchIndicator(event.control)) {
-            midi->setLed(indicator->number, midi->faderStates.at(event.control.number).received.has_value());
-          }
-          if (!midi->faderStates.at(event.control.number).received.has_value()) {
-            midi->callback({control, value});
-          }
-          break;
-      }
-    }, this);
+    rtMidiIn.setCallback(&Midi::midiCallback, this);
   }
 }
 
