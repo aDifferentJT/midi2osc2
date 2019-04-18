@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>midi2osc</title>
+    <link type="text/css" rel="stylesheet" href="common.css"/>
+    <link type="text/css" rel="stylesheet" href="bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="bootstrap-toc.min.css"/>
+    <script src="jquery.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="bootstrap-toc.min.js"></script>
+    <script src="common.js"></script>
+  </head>
+  <body data-spy="scroll" data-target="#toc">
+    <div include="navbar.xhtml"></div>
+    <div class="container bodypadding">
+      <div class="row">
+        <div class="col-md-3">
+          <nav id="toc" data-toggle="toc" class="sticky-top"/>
+        </div>
+        <div class="col-md-9">
+          <h1>Config Files</h1>
+          <p>
+          midi2osc2 is configured by a main config file that is passed as the first and only command line argument. This references several other files also described in this document.
+          </p>
+          <h2 id="main">The main config file</h2>
+          The main config file has should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Format</th>
+                <th>Count</th>
+                <th style="width: 100%">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>midi:&lt;Device&nbsp;name&gt;:&lt;Profile&nbsp;Path&gt;</td>
+                <td>Exactly once</td>
+                <td style="width: 100%; word-wrap:break-word">The name and profile of the midi controller. The name must be a prefix of how the midi controller appears on the system, this is to allow differences between operating systems. The profile path must be a path to a file <a href="#profile">as described below</a></td>
+              </tr>
+            </tbody>
+          </table>
+          <h2 id="profile">Midi profile</h2>
+          <script>
+            includeHTML(() => {
+              setNavItemActive();
+            });
+          </script>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

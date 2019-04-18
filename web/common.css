@@ -9,3 +9,7 @@
   margin-bottom: 125px;
 }
 
+nav[data-toggle="toc"] {
+  top: 110px;
+}
+
