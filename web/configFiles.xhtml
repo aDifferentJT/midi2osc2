@@ -14,198 +14,195 @@
   <body data-spy="scroll" data-target="#toc">
     <div include="navbar.xhtml"></div>
     <div class="container bodypadding">
-      <div class="row">
-        <div class="col-md-auto">
-          <nav id="toc" data-toggle="toc" class="sticky-top"/>
-        </div>
-        <div class="col-md">
-          <h1>Config Files</h1>
-          <p>
-          midi2osc2 is configured by a main config file that is passed as the first and only command line argument. This references several other files also described in this document.
-          </p><p>
-          These specifications are not all necessarily checked by midi2osc2's parser and if they are not fulfilled the resultant behaviour is undefined and cannot be depended upon not to change between versions.
-          </p>
-          <h2 id="config">Config File</h2>
-          <p>
-          The main config file should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
-          </p><p>
-          Text in angle brackets is to be replaced and text in square brackets is optional.
-          </p>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Format</th>
-                <th>Count</th>
-                <th style="width: 100%">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>midi&#x200B;:&#x2060;&lt;Device&nbsp;Name&gt;&#x200B;:&#x2060;&lt;Profile&nbsp;Path&gt;</td>
-                <td>Exactly once</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  The name and profile of the midi controller
-                  </p><p>
-                  &lt;Device Name&gt; must be a prefix of how the midi controller appears on the system, this is to allow differences between operating systems
-                  </p><p>
-                  &lt;Profile Path&gt; must be a path to a file <a href="#profile">as described below</a>
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>osc&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Host&gt;&#x200B;:&#x2060;&lt;Output&nbsp;Port&gt;&#x200B;:&#x2060;&lt;Feedback&nbsp;Port&gt;[:&#x2060;&lt;Initialisation&nbsp;message&gt;]</td>
-                <td>At least once</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  The details of an output
-                  </p><p>
-                  e.g. For QLC+ running on the local machine: <tt>osc:QLC+:127.0.0.1:7700:9000</tt>
-                  </p><p>
-                  e.g. For an X Air Mixer at 192.168.1.1: <tt>osc:Mixer:192.168.1.1:10024:9010:/xremote</tt>
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>bank&#x200B;:&#x2060;&lt;Path&gt;</td>
-                <td>At least once</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  The path to a mapping for a bank
-                  </p><p>
-                  The format of the mapping file <a href="#mapping">is described below</a> for completeness but this file doesn't need to be manually created, it will be automatically created if it doesn't exist and you can add to the mapping from the <a href="control.xhtml">Control Panel</a>
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>bankLeft&#x200B;:&#x2060;&lt;Control&gt;</td>
-                <td rowspan="2">Exactly once each if more than one bank defined, at most once otherwise</td>
-                <td rowspan="2" style="width: 100%; word-wrap:break-word">
-                  <p>
-                  The control that switches bank to the left or right
-                  </p><p>
-                  &lt;Control&gt; must be a control name as defined in the currently used <a href="#profile">Midi Profile</a>
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>bankRight&#x200B;:&#x2060;&lt;Control&gt;</td>
-              </tr>
-              <tr>
-                <td>channelGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</td>
-                <td rowspan="2">Any</td>
-                <td rowspan="2" style="width: 100%; word-wrap:break-word">
-                  <p>
-                  A channel/action group
-                  </p><p>
-                  &lt;Controls&gt; must be a commma separated list of control names as defined in the <a href="#profile">Midi Profile</a>
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>actionGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</td>
-              </tr>
-            </tbody>
-          </table>
-          <h2 id="profile">Midi Profile</h2>
-          <p>
-          The midi profile should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
-          </p><p>
-          Text in angle brackets is to be replaced and text in square brackets is optional.
-          </p>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Format</th>
-                <th style="width: 100%">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>B&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  A button on the midi controller
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>F&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;[:&#x2060;&lt;Indicator&gt;]</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  A fader on the midi controller
-                  </p><p>
-                  &lt;Indicator&gt;, if present, must be the name of a button within this same file.
-                  </p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <h2 id="mapping">Mapping</h2>
-          <p>
-          <strong>The mapping files can be automatically generated and are managed from the control panel and they should not need manual editing. The format is described here for completeness.</strong>
-          </p><p>
-          The mapping file should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
-          </p><p>
-          Text in angle brackets is to be replaced and text in square brackets is optional.
-          </p>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Format</th>
-                <th style="width: 100%">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>control&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Path&gt;</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  A mapping from a control
-                  </p><p>
-                  &lt;Name&gt; should be the name of a control from the current <a href="#profile">Midi Profile</a>
-                  </p><p>
-                  &lt;Device&gt; should be the name of an output from the current <a href="#config">Config File</a>
-                  </p><p>
-                  &lt;Path&gt; should be a string beginning with a forward slash (/)
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>channel&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Preset&gt;</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  A mapping from a channel
-                  </p><p>
-                  &lt;Name&gt; should be the name of a channel group from the current <a href="#config">Config File</a>
-                  </p><p>
-                  &lt;Device&gt; should be the name of an output from the current <a href="#config">Config File</a>
-                  </p><p>
-                  &lt;Preset&gt; should be one of the preset channel types
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td>action&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Preset&gt;</td>
-                <td style="width: 100%; word-wrap:break-word">
-                  <p>
-                  A mapping from an action
-                  </p><p>
-                  &lt;Name&gt; should be the name of an action group from the current <a href="#config">Config File</a>
-                  </p><p>
-                  &lt;Preset&gt; should be one of the preset action types
-                  </p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <script>
-            includeHTML(() => {
-              setNavItemActive();
-            });
-          </script>
-        </div>
+      <h1>Config Files</h1>
+      <p>
+      midi2osc2 is configured by a main config file that is passed as the first and only command line argument. This references several other files also described in this document.
+      </p><p>
+      These specifications are not all necessarily checked by midi2osc2's parser and if they are not fulfilled the resultant behaviour is undefined and cannot be depended upon not to change between versions.
+      </p>
+      <div class="toc-inline">
+        <div style="margin-top: -25px;"><span style="background: white;">&nbsp;Contents&nbsp;</span></div>
+        <nav id="toc" data-toggle="toc"/>
       </div>
+      <h2 id="config">Config File</h2>
+      <p>
+      The main config file should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
+      </p><p>
+      Text in angle brackets is to be replaced and text in square brackets is optional.
+      </p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Format</th>
+            <th>Count</th>
+            <th style="width: 100%">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>midi&#x200B;:&#x2060;&lt;Device&nbsp;Name&gt;&#x200B;:&#x2060;&lt;Profile&nbsp;Path&gt;</td>
+            <td>Exactly once</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              The name and profile of the midi controller
+              </p><p>
+              &lt;Device Name&gt; must be a prefix of how the midi controller appears on the system, this is to allow differences between operating systems
+              </p><p>
+              &lt;Profile Path&gt; must be a path to a file <a href="#profile">as described below</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>osc&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Host&gt;&#x200B;:&#x2060;&lt;Output&nbsp;Port&gt;&#x200B;:&#x2060;&lt;Feedback&nbsp;Port&gt;[:&#x2060;&lt;Initialisation&nbsp;message&gt;]</td>
+            <td>At least once</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              The details of an output
+              </p><p>
+              e.g. For QLC+ running on the local machine: <tt>osc:QLC+:127.0.0.1:7700:9000</tt>
+              </p><p>
+              e.g. For an X Air Mixer at 192.168.1.1: <tt>osc:Mixer:192.168.1.1:10024:9010:/xremote</tt>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>bank&#x200B;:&#x2060;&lt;Path&gt;</td>
+            <td>At least once</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              The path to a mapping for a bank
+              </p><p>
+              The format of the mapping file <a href="#mapping">is described below</a> for completeness but this file doesn't need to be manually created, it will be automatically created if it doesn't exist and you can add to the mapping from the <a href="control.xhtml">Control Panel</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>bankLeft&#x200B;:&#x2060;&lt;Control&gt;</td>
+            <td rowspan="2">Exactly once each if more than one bank defined, at most once otherwise</td>
+            <td rowspan="2" style="width: 100%; word-wrap:break-word">
+              <p>
+              The control that switches bank to the left or right
+              </p><p>
+              &lt;Control&gt; must be a control name as defined in the currently used <a href="#profile">Midi Profile</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>bankRight&#x200B;:&#x2060;&lt;Control&gt;</td>
+          </tr>
+          <tr>
+            <td>channelGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</td>
+            <td rowspan="2">Any</td>
+            <td rowspan="2" style="width: 100%; word-wrap:break-word">
+              <p>
+              A channel/action group
+              </p><p>
+              &lt;Controls&gt; must be a commma separated list of control names as defined in the <a href="#profile">Midi Profile</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>actionGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="profile">Midi Profile</h2>
+      <p>
+      The midi profile should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
+      </p><p>
+      Text in angle brackets is to be replaced and text in square brackets is optional.
+      </p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Format</th>
+            <th style="width: 100%">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>B&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              A button on the midi controller
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>F&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;[:&#x2060;&lt;Indicator&gt;]</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              A fader on the midi controller
+              </p><p>
+              &lt;Indicator&gt;, if present, must be the name of a button within this same file.
+              </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="mapping">Mapping</h2>
+      <p>
+      <strong>The mapping files can be automatically generated and are managed from the control panel and they should not need manual editing. The format is described here for completeness.</strong>
+      </p><p>
+      The mapping file should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
+      </p><p>
+      Text in angle brackets is to be replaced and text in square brackets is optional.
+      </p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Format</th>
+            <th style="width: 100%">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>control&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Path&gt;</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              A mapping from a control
+              </p><p>
+              &lt;Name&gt; should be the name of a control from the current <a href="#profile">Midi Profile</a>
+              </p><p>
+              &lt;Device&gt; should be the name of an output from the current <a href="#config">Config File</a>
+              </p><p>
+              &lt;Path&gt; should be a string beginning with a forward slash (/)
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>channel&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Preset&gt;</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              A mapping from a channel
+              </p><p>
+              &lt;Name&gt; should be the name of a channel group from the current <a href="#config">Config File</a>
+              </p><p>
+              &lt;Device&gt; should be the name of an output from the current <a href="#config">Config File</a>
+              </p><p>
+              &lt;Preset&gt; should be one of the preset channel types
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td>action&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Preset&gt;</td>
+            <td style="width: 100%; word-wrap:break-word">
+              <p>
+              A mapping from an action
+              </p><p>
+              &lt;Name&gt; should be the name of an action group from the current <a href="#config">Config File</a>
+              </p><p>
+              &lt;Preset&gt; should be one of the preset action types
+              </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <script>
+        includeHTML(() => {
+          setNavItemActive();
+        });
+      </script>
     </div>
   </body>
 </html>
