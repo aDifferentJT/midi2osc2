@@ -34,7 +34,7 @@ class MidiConsole {
       for (unsigned int i = 0; i < rtMidiIn.getPortCount(); i++) {
         std::cout << i << ":" << rtMidiIn.getPortName(i) << std::endl;
       }
-
+      std::cout << "Select a controller: ";
       unsigned int portNumber;
       std::cin >> portNumber;
 
