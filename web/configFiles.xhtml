@@ -26,7 +26,7 @@
       </div>
       <h2 id="config">Config File</h2>
       <p>
-      The main config file should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
+      The main config file should contain only lines in the following formats and comments (lines starting with <tt>//</tt>). Leading whitespace is ignored.
       </p><p>
       Text in angle brackets is to be replaced and text in square brackets is optional.
       </p>
@@ -40,7 +40,7 @@
         </thead>
         <tbody>
           <tr>
-            <td>midi&#x200B;:&#x2060;&lt;Device&nbsp;Name&gt;&#x200B;:&#x2060;&lt;Profile&nbsp;Path&gt;</td>
+            <td><tt>midi&#x200B;:&#x2060;&lt;Device&nbsp;Name&gt;&#x200B;:&#x2060;&lt;Profile&nbsp;Path&gt;</tt></td>
             <td>Exactly once</td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
@@ -53,7 +53,7 @@
             </td>
           </tr>
           <tr>
-            <td>osc&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Host&gt;&#x200B;:&#x2060;&lt;Output&nbsp;Port&gt;&#x200B;:&#x2060;&lt;Feedback&nbsp;Port&gt;[:&#x2060;&lt;Initialisation&nbsp;message&gt;]</td>
+            <td><tt>osc&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Host&gt;&#x200B;:&#x2060;&lt;Output&nbsp;Port&gt;&#x200B;:&#x2060;&lt;Feedback&nbsp;Port&gt;[:&#x2060;&lt;Initialisation&nbsp;message&gt;]</tt></td>
             <td>At least once</td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
@@ -66,7 +66,7 @@
             </td>
           </tr>
           <tr>
-            <td>bank&#x200B;:&#x2060;&lt;Path&gt;</td>
+            <td><tt>bank&#x200B;:&#x2060;&lt;Path&gt;</tt></td>
             <td>At least once</td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
@@ -77,7 +77,7 @@
             </td>
           </tr>
           <tr>
-            <td>bankLeft&#x200B;:&#x2060;&lt;Control&gt;</td>
+            <td><tt>bankLeft&#x200B;:&#x2060;&lt;Control&gt;</tt></td>
             <td rowspan="2">Exactly once each if more than one bank defined, at most once otherwise</td>
             <td rowspan="2" style="width: 100%; word-wrap:break-word">
               <p>
@@ -88,10 +88,10 @@
             </td>
           </tr>
           <tr>
-            <td>bankRight&#x200B;:&#x2060;&lt;Control&gt;</td>
+            <td><tt>bankRight&#x200B;:&#x2060;&lt;Control&gt;</tt></td>
           </tr>
           <tr>
-            <td>channelGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</td>
+            <td><tt>channelGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</tt></td>
             <td rowspan="2">Any</td>
             <td rowspan="2" style="width: 100%; word-wrap:break-word">
               <p>
@@ -102,13 +102,13 @@
             </td>
           </tr>
           <tr>
-            <td>actionGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</td>
+            <td><tt>actionGroup&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Controls&gt;</tt></td>
           </tr>
         </tbody>
       </table>
       <h2 id="profile">Midi Profile</h2>
       <p>
-      The midi profile should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
+      The midi profile should contain only lines in the following formats and comments (lines starting with <tt>//</tt>). Leading whitespace is ignored.
       </p><p>
       Text in angle brackets is to be replaced and text in square brackets is optional.
       </p>
@@ -121,7 +121,7 @@
         </thead>
         <tbody>
           <tr>
-            <td>B&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;</td>
+            <td><tt>B&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;</tt></td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
               A button on the midi controller
@@ -129,7 +129,7 @@
             </td>
           </tr>
           <tr>
-            <td>F&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;[:&#x2060;&lt;Indicator&gt;]</td>
+            <td><tt>F&lt;Number&gt;&#x200B;:&#x2060;&lt;Name&gt;[:&#x2060;&lt;Indicator&gt;]</tt></td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
               A fader on the midi controller
@@ -147,7 +147,7 @@
       <p>
       <strong>The mapping files can be automatically generated and are managed from the control panel and they should not need manual editing. The format is described here for completeness.</strong>
       </p><p>
-      The mapping file should contain only lines in the following formats and comments (lines starting with //). Leading whitespace is ignored.
+      The mapping file should contain only lines in the following formats and comments (lines starting with <tt>//</tt>). Leading whitespace is ignored.
       </p><p>
       Text in angle brackets is to be replaced and text in square brackets is optional.
       </p>
@@ -160,7 +160,7 @@
         </thead>
         <tbody>
           <tr>
-            <td>control&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Path&gt;</td>
+            <td><tt>control&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Path&gt;</tt></td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
               A mapping from a control
@@ -169,12 +169,12 @@
               </p><p>
               &lt;Device&gt; should be the name of an output from the current <a href="#config">Config File</a>
               </p><p>
-              &lt;Path&gt; should be a string beginning with a forward slash (/)
+              &lt;Path&gt; should be a string beginning with a forward slash (<tt>/</tt>)
               </p>
             </td>
           </tr>
           <tr>
-            <td>channel&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Preset&gt;</td>
+            <td><tt>channel&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Device&gt;&#x200B;:&#x2060;&lt;Preset&gt;</tt></td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
               A mapping from a channel
@@ -188,7 +188,7 @@
             </td>
           </tr>
           <tr>
-            <td>action&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Preset&gt;</td>
+            <td><tt>action&#x200B;:&#x2060;&lt;Name&gt;&#x200B;:&#x2060;&lt;Preset&gt;</tt></td>
             <td style="width: 100%; word-wrap:break-word">
               <p>
               A mapping from an action
