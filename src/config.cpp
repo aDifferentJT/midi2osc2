@@ -11,7 +11,7 @@ namespace asio { class io_context; }
 Config::Config(asio::io_context& io_context, const std::string& filename) : gui(io_context) {
   std::ifstream f(filename);
   while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
-    while (std::isspace(f.peek())) { f.ignore(); }
+    while (std::isspace(f.peek()) != 0) { f.ignore(); }
     std::string str;
     std::getline(f, str);
     if (str.empty() || str.substr(0, 2) == "//") {

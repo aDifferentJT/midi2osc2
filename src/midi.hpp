@@ -5,11 +5,12 @@
 #include <rtmidi/RtMidi.h>      // for RtMidiIn, RtMidiOut
 #include <functional>           // for function
 #include <optional>             // for optional
+#include <set>                  // for set
 #include <string>               // for string
 #include <unordered_map>        // for unordered_map
 #include <utility>              // for move
-#include <variant>              // for variant
 #include <vector>               // for vector
+#include "midi_core.hpp"        // for MidiControl
 class Config;
 
 class Midi {
@@ -19,16 +20,6 @@ class Midi {
       float value;
     };
   private:
-    struct MidiControl {
-      enum class Type { Button, Fader };
-      Type type = Type::Button;
-      uint8_t number = 0;
-    };
-    struct MidiEvent {
-      MidiControl control;
-      std::variant<bool, uint8_t> value;
-      explicit MidiEvent(std::vector<unsigned char> message);
-    };
     struct Profile {
       private:
         std::unordered_map<int, std::string> mapMidiControlToString;
@@ -39,6 +30,7 @@ class Midi {
         std::string stringFromMidiControl(MidiControl c);
         MidiControl controlFromString(const std::string& str);
         std::optional<MidiControl> catchIndicator(MidiControl c);
+        std::set<uint8_t> allLeds();
     };
     struct FaderState {
       std::optional<float> moved;
@@ -62,12 +54,20 @@ class Midi {
     const bool isMock;
 
     Midi(const std::string& deviceName, const std::string& profileFilename, Config& config);
+    Midi(const Midi&) = delete;
+    Midi& operator =(const Midi&) = delete;
+    Midi(Midi&& other) = default;
+    Midi& operator =(Midi&&) = delete;
+    ~Midi();
+
     void feedback(const std::string& controlS, float v);
     void setCallback(std::function<void(Event)> f) { callback = std::move(f); }
 
     void setLed(const std::string& control, bool value) { setLed(profile.controlFromString(control).number, value); }
 
     void recvMockMoved(Event e) { if (!isMock) { throw; } callback(std::move(e)); }
+
+    friend class MidiConsole;
 };
 
 #endif

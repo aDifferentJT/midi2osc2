@@ -8,6 +8,8 @@ add_compile_options(${TARGET_NAME} -Wall -Wextra -pedantic)
 
 include_directories(websocketpp)
 add_executable(midi2osc2 main.cpp mappings.cpp midi.cpp osc.cpp gui.cpp config.cpp)
-
 target_link_libraries(midi2osc2 pthread rtmidi)
+
+add_executable(midi_console midi_console.cpp)
+target_link_libraries(midi_console pthread rtmidi)
 

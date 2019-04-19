@@ -1,40 +1,19 @@
 #include "midi.hpp"
 #include <algorithm>   // for mismatch, copy
+#include <chrono>      // for milliseconds
 #include <cmath>       // for fabsf
 #include <cstdint>     // for uint8_t
-#include <iostream>    // for cerr
-#include <memory>      // for __shared_ptr_access, shared_ptr
+#include <iostream>    // for cerr, cout
 #include <stdexcept>   // for out_of_range
+#include <thread>      // for sleep_for
+#include <variant>     // for get
 #include "config.hpp"  // for Config
 #include "gui.hpp"     // for GUI
 #include <fstream> // IWYU pragma: keep
 
+
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
-Midi::MidiEvent::MidiEvent(std::vector<unsigned char> message) {
-  switch (message[0]) {
-    case 0x90:
-      control.type = MidiControl::Type::Button;
-      control.number = message[1];
-      value = true;
-      break;
-    case 0x80:
-      control.type = MidiControl::Type::Button;
-      control.number = message[1];
-      value = false;
-      break;
-    case 0xB0:
-      control.type = MidiControl::Type::Fader;
-      control.number = message[1];
-      if (message.size() == 2) {
-        value = (uint8_t)0;
-      } else {
-        value = message[2];
-      }
-      break;
-  }
-}
 
 Midi::Profile::Profile(const std::string& filename) {
   std::ifstream f(filename);
@@ -75,16 +54,27 @@ Midi::Profile::Profile(const std::string& filename) {
 std::string Midi::Profile::stringFromMidiControl(MidiControl c) {
   return mapMidiControlToString.at((static_cast<int>(c.type) << 8) | c.number);
 }
-Midi::MidiControl Midi::Profile::controlFromString(const std::string& str) {
+MidiControl Midi::Profile::controlFromString(const std::string& str) {
   int cEnc = mapStringToMidiControl.at(str);
-  return {static_cast<Midi::MidiControl::Type>(cEnc >> 8), static_cast<uint8_t>(cEnc & 0xFF)};
+  return {static_cast<MidiControl::Type>(cEnc >> 8), static_cast<uint8_t>(cEnc & 0xFF)};
 }
-std::optional<Midi::MidiControl> Midi::Profile::catchIndicator(MidiControl c) {
+std::optional<MidiControl> Midi::Profile::catchIndicator(MidiControl c) {
   try {
     return controlFromString(catchIndicatorMap.at(stringFromMidiControl(c)));
   } catch (std::out_of_range&) {
     return std::nullopt;
   }
+}
+
+std::set<uint8_t> Midi::Profile::allLeds() {
+  std::set<uint8_t> s;
+  for (auto& x : mapMidiControlToString) {
+    int cEnc = x.first;
+    if (static_cast<MidiControl::Type>(cEnc >> 8) == MidiControl::Type::Button) {
+      s.insert(static_cast<uint8_t>(cEnc & 0xFF));
+    }
+  }
+  return s;
 }
 
 void Midi::setLed(uint8_t number, bool value) {
@@ -102,6 +92,7 @@ bool inBounds(T a, T b, T c) {
 }
 
 void Midi::midiCallback(double timeStamp, std::vector<unsigned char>* message, void* userData) {
+  std::cout << "Callback" << std::endl;
   (void)timeStamp;
   Midi* midi = static_cast<Midi*>(userData);
   MidiEvent event(*message);
@@ -170,7 +161,20 @@ Midi::Midi(const std::string& deviceName, const std::string& profileFilename, Co
     }
     rtMidiIn.openPort(portNumber);
     rtMidiOut.openPort(portNumber);
+    for (uint8_t led : profile.allLeds()) {
+      setLed(led, true);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    for (uint8_t led : profile.allLeds()) {
+      setLed(led, false);
+    }
     rtMidiIn.setCallback(&Midi::midiCallback, this);
+  }
+}
+
+Midi::~Midi() {
+  for (uint8_t led : profile.allLeds()) {
+    setLed(led, false);
   }
 }
 
