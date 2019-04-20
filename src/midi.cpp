@@ -36,7 +36,7 @@ Midi::Profile::Profile(const std::string& filename) {
     }
     int n;
     f >> n;
-    number = (uint8_t)n;
+    number = static_cast<uint8_t>(n);
     int cEnc = (static_cast<int>(type) << 8) | number;
     if (f.get() != ':') { throw; }
     std::string str;
@@ -81,7 +81,7 @@ void Midi::setLed(uint8_t number, bool value) {
   if (isMock) {
     config.gui.send("mockSetLed:" + profile.stringFromMidiControl({MidiControl::Type::Button, number}) + ":" + (value ? "true" : "false"));
   } else {
-    std::vector<unsigned char> message({0x90, number, value ? (uint8_t)0x7F : (uint8_t)0x00});
+    std::vector<unsigned char> message({0x90, number, value ? static_cast<uint8_t>(0x7F) : static_cast<uint8_t>(0x00)});
     rtMidiOut.sendMessage(&message);
   }
 }

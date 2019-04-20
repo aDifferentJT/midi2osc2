@@ -3,7 +3,7 @@
 
 #include <bits/stdint-uintn.h>  // for uint8_t
 #include <variant>              // for variant
-#include <vector>
+#include <vector>               // for vector
 
 struct MidiControl {
   enum class Type { Button, Fader };
@@ -29,7 +29,7 @@ struct MidiEvent {
         control.type = MidiControl::Type::Fader;
         control.number = message[1];
         if (message.size() == 2) {
-          value = (uint8_t)0;
+          value = static_cast<uint8_t>(0);
         } else {
           value = message[2];
         }

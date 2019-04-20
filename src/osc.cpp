@@ -66,7 +66,7 @@ std::vector<char> OSC::Message::makeArgument(Argument arg) {
                     { [](int32_t v)           -> std::vector<char> { return makeOSCnum(v); }
                       , [](float v)             -> std::vector<char> { return makeOSCnum(v); }
                       , [](std::string v)       -> std::vector<char> { return makeOSCstring(v); }
-                      , [](std::vector<char> v) -> std::vector<char> { return makeOSCstring(concat(makeOSCnum((int32_t)v.size()), v)); }
+                      , [](std::vector<char> v) -> std::vector<char> { return makeOSCstring(concat(makeOSCnum(static_cast<int32_t>(v.size())), v)); }
                     }, std::move(arg));
 }
 

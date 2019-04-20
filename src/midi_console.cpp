@@ -22,7 +22,7 @@ class MidiConsole {
           std::cout << "F";
           break;
       }
-      std::cout << std::setfill('0') << std::setw(3) << (int)event.control.number;
+      std::cout << std::setfill('0') << std::setw(3) << static_cast<int>(event.control.number);
       std::cout << '\r';
       std::cout.flush();
     }
