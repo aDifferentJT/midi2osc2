@@ -9,7 +9,8 @@
 // IWYU pragma: no_include <asio/ip/udp.hpp>
 // IWYU pragma: no_forward_declare asio::io_context
 
-#include <bits/stdint-intn.h>   // for int32_t
+//#include <bits/stdint-intn.h>   // for int32_t
+#include <stdint.h> // PRAGMA IWYU: keep  // for int32_t
 #include <algorithm>            // for reverse
 #include <functional>           // for function
 #include <iosfwd>               // for size_t
@@ -19,6 +20,13 @@
 #include <variant>              // for variant
 #include <vector>               // for vector, vector<>::iterator
 #include "output.hpp"           // for Output
+
+namespace std::endian {
+  enum endianness {
+    little, big
+  };
+  extern endianness native;
+}
 
 using asio::ip::udp;
 

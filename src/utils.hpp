@@ -3,10 +3,11 @@
 
 #include <functional>
 #include <optional>
+#include <unordered_map>
 #include <variant>
 
 template <typename T, typename U>
-std::optional<T> bindOptional(std::optional<U> x, std::function<T(U*)> f) { return x ? std::optional{f(&*x)} : std::nullopt; }
+std::optional<T> bindOptional(std::optional<U> x, std::function<T(U*)> f) { return x ? std::optional<T>(f(&*x)) : std::nullopt; }
 
 template <typename T, typename U>
 std::optional<U> getOpt(std::unordered_map<T,U> xs, T x) {

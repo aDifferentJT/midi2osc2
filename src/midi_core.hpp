@@ -1,7 +1,8 @@
 #ifndef MidiCore_h
 #define MidiCore_h
 
-#include <bits/stdint-uintn.h>  // for uint8_t
+//#include <bits/stdint-uintn.h>  // for uint8_t
+#include <stdint.h>  // PRAGMA IWYU: kepp
 #include <variant>              // for variant
 #include <vector>               // for vector
 

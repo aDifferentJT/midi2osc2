@@ -1,4 +1,5 @@
-#include <rtmidi/RtMidi.h>  // for RtMidiIn, RtMidi, RtMidi::UNSPECIFIED
+//#include <rtmidi/RtMidi.h>  // for RtMidiIn, RtMidi, RtMidi::UNSPECIFIED
+#include <RtMidi.h>  // for RtMidiIn, RtMidi, RtMidi::UNSPECIFIED
 #include <future>           // for promise, future
 #include <iomanip>          // for operator<<, setfill, setw
 #include <iostream>         // for operator<<, cout, ostream, basic_ostream

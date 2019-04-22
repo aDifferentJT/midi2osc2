@@ -4,13 +4,16 @@
 // IWYU pragma: no_include <asio/ip/address_v4.hpp>
 // IWYU pragma: no_include <asio/ip/impl/address.ipp>
 
-#include <bits/stdint-intn.h>        // for int32_t
+//#include <bits/stdint-intn.h>        // for int32_t
+#include <stdint.h> // PRAGMA IWYU: keep  // for int32_t
 #include <iostream>                  // for operator<<, endl, basic_ostream
 #include <iterator>                  // for back_insert_iterator, back_inserter
 #include <new>                       // for operator new
 #include <numeric>                   // for accumulate
 #include <system_error>              // for error_code
 #include "utils.hpp"                 // for bindMember
+
+std::endian::endianness std::endian::native = std::endian::little;
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
