@@ -72,7 +72,7 @@ class OSC final : public Output {
           }
         template <typename T>
           static std::vector<char> makeOSCstring(T str) {
-            std::size_t pad = 3 - ((str.size() + 3) % 4);
+            std::size_t pad = 4 - (str.size() % 4);
             std::vector<char> v(str.begin(), str.end());
             for(std::size_t i = 0; i < pad; i++) {
               v.push_back('\0');

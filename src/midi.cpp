@@ -92,7 +92,6 @@ bool inBounds(T a, T b, T c) {
 }
 
 void Midi::midiCallback(double timeStamp, std::vector<unsigned char>* message, void* userData) {
-  std::cout << "Callback" << std::endl;
   (void)timeStamp;
   Midi* midi = static_cast<Midi*>(userData);
   MidiEvent event(*message);

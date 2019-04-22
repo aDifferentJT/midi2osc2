@@ -97,7 +97,7 @@ OSC::Message::Message(std::vector<char> packet) {
     case 'b': return Type::b;
     default: throw;
   }});
-  std::size_t typeTagStringPad = 3 - ((typeTagStringEnd - typeTagStringBegin + 3) % 4);
+  std::size_t typeTagStringPad = 4 - ((typeTagStringEnd - typeTagStringBegin) % 4);
   char* argumentsIt = &*(typeTagStringEnd + typeTagStringPad);
   for (Type t : types) {
     switch (t) {
@@ -114,7 +114,7 @@ OSC::Message::Message(std::vector<char> packet) {
           std::string str(argumentsIt);
           arguments.emplace_back(str);
           std::size_t n = str.size();
-          std::size_t pad = 3 - ((n + 3) % 4);
+          std::size_t pad = 4 - (n % 4);
           argumentsIt += n + pad;
         }
         break;
@@ -124,7 +124,7 @@ OSC::Message::Message(std::vector<char> packet) {
           argumentsIt += sizeof(int32_t);
           std::vector<char> v(argumentsIt, argumentsIt + n);
           arguments.emplace_back(v);
-          std::size_t pad = 3 - ((n + 3) % 4);
+          std::size_t pad = 4 - (n % 4);
           argumentsIt += n + pad;
         }
         break;
