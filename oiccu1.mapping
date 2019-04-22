@@ -1,0 +1,9 @@
+channel:8a:Mixer:input$8
+channel:7a:Mixer:input$7
+channel:2a:Mixer:input$2
+channel:1a:Mixer:input$1
+channel:6a:Mixer:input$6
+channel:4a:Mixer:input$4
+channel:3a:Mixer:input$3
+channel:5a:Mixer:input$5
+action:Faders:fader
