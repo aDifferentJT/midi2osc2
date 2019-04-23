@@ -43,7 +43,7 @@ Config::Config(asio::io_context& io_context, const std::string& filename) : gui(
       std::size_t profileStart = nameEnd + 1;
       std::size_t profileEnd = str.find(':', profileStart);
       std::string profile = str.substr(profileStart, profileEnd - profileStart);
-      midi = std::make_shared<Midi>(name, profile, *this);
+      midi = std::make_unique<Midi>(name, profile, *this);
     } else if (type == "bank") {
       banks.push_back(str.substr(typeEnd + 1));
     } else if (type == "bankLeft") {

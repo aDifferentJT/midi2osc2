@@ -21,6 +21,8 @@
 #include <vector>               // for vector, vector<>::iterator
 #include "output.hpp"           // for Output
 
+#include <iostream>
+
 namespace std::endian {
   enum endianness {
     little, big
@@ -126,6 +128,9 @@ class OSC final : public Output {
     void send(const std::string& addressPattern, float arg) override { send(Message(addressPattern, arg)); }
     template <typename... Args>
       void send(const std::string& addressPattern, Args... args) { send(Message(addressPattern, args...)); }
+    void sendPeriodically(Message message, std::chrono::seconds period = std::chrono::seconds(9));
+    template <typename... Args>
+      void send(const std::string& addressPattern, Args... args, std::chrono::seconds period = std::chrono::seconds(9)) { sendPeriodically(Message(addressPattern, args...), period); }
     void setCallback(std::function<void(Message)> f) { callback = std::move(f); }
     void setCallback(std::function<void(const std::string&, float)> f) override { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
     std::pair<std::string, bool> merge(const std::string& channel, const std::string& action) const override;

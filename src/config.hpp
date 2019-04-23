@@ -22,7 +22,7 @@ class Config {
     };
     GUI gui;
     std::unordered_map<std::string, std::unique_ptr<Output>> outputs;
-    std::shared_ptr<Midi> midi;
+    std::unique_ptr<Midi> midi;
     std::vector<std::string> banks;
     std::string bankLeft;
     std::string bankRight;

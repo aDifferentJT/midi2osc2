@@ -6,11 +6,13 @@
 
 //#include <bits/stdint-intn.h>        // for int32_t
 #include <stdint.h> // PRAGMA IWYU: keep  // for int32_t
+#include <chrono>
 #include <iostream>                  // for operator<<, endl, basic_ostream
 #include <iterator>                  // for back_insert_iterator, back_inserter
 #include <new>                       // for operator new
 #include <numeric>                   // for accumulate
 #include <system_error>              // for error_code
+#include <thread>
 #include "utils.hpp"                 // for bindMember
 
 std::endian::endianness std::endian::native = std::endian::little;
@@ -66,11 +68,11 @@ std::vector<char> concat(Types... datas) {
 
 std::vector<char> OSC::Message::makeArgument(Argument arg) {
   return std::visit(overloaded
-                    { [](int32_t v)           -> std::vector<char> { return makeOSCnum(v); }
-                      , [](float v)             -> std::vector<char> { return makeOSCnum(v); }
-                      , [](std::string v)       -> std::vector<char> { return makeOSCstring(v); }
-                      , [](std::vector<char> v) -> std::vector<char> { return makeOSCstring(concat(makeOSCnum(static_cast<int32_t>(v.size())), v)); }
-                    }, std::move(arg));
+      { [](int32_t v)           -> std::vector<char> { return makeOSCnum(v); }
+      , [](float v)             -> std::vector<char> { return makeOSCnum(v); }
+      , [](std::string v)       -> std::vector<char> { return makeOSCstring(v); }
+      , [](std::vector<char> v) -> std::vector<char> { return makeOSCstring(concat(makeOSCnum(static_cast<int32_t>(v.size())), v)); }
+      }, std::move(arg));
 }
 
 std::vector<char> OSC::Message::makeArguments(std::vector<Argument> arg) {
@@ -91,12 +93,12 @@ OSC::Message::Message(std::vector<char> packet) {
   auto typeTagStringEnd = std::find(typeTagStringBegin, packet.end(), '\0');
   types.resize(typeTagStringEnd - (typeTagStringBegin + 1));
   std::transform(typeTagStringBegin + 1, typeTagStringEnd, types.begin(), [](char t){ switch (t) {
-    case 'i': return Type::i;
-    case 'f': return Type::f;
-    case 's': return Type::s;
-    case 'b': return Type::b;
-    default: throw;
-  }});
+      case 'i': return Type::i;
+      case 'f': return Type::f;
+      case 's': return Type::s;
+      case 'b': return Type::b;
+      default: throw;
+      }});
   std::size_t typeTagStringPad = 4 - ((typeTagStringEnd - typeTagStringBegin) % 4);
   char* argumentsIt = &*(typeTagStringEnd + typeTagStringPad);
   for (Type t : types) {
@@ -134,9 +136,9 @@ OSC::Message::Message(std::vector<char> packet) {
 
 std::vector<char> OSC::Message::toPacket() {
   return concat( makeOSCstring(addressPattern)
-                , makeTypeTagString(types)
-                , makeArguments(arguments)
-               );
+      , makeTypeTagString(types)
+      , makeArguments(arguments)
+      );
 }
 
 float OSC::Message::toFloat() {
@@ -144,11 +146,11 @@ float OSC::Message::toFloat() {
     throw;
   }
   return std::visit(overloaded
-                    { [](int32_t v)           -> float { return static_cast<float>(v); }
-                      , [](float v)             -> float { return v; }
-                      , [](std::string v)       -> float { (void)v; throw; }
-                      , [](std::vector<char> v) -> float { (void)v; throw; }
-                    }, arguments[0]);
+      { [](int32_t v)           -> float { return static_cast<float>(v); }
+      , [](float v)             -> float { return v; }
+      , [](std::string v)       -> float { (void)v; throw; }
+      , [](std::vector<char> v) -> float { (void)v; throw; }
+      }, arguments[0]);
 }
 
 void OSC::recvHandler(const asio::error_code& error, std::size_t count_recv) {
@@ -170,6 +172,16 @@ OSC::OSC(asio::io_context& io_context, const std::string& ip, unsigned short sen
 
 void OSC::send(Message message) {
   socket.send_to(asio::buffer(message.toPacket()), udp::endpoint(address, sendPort));
+}
+
+void OSC::sendPeriodically(Message message, std::chrono::seconds period) {
+  std::thread([this, message, period]() {
+      for (;;) {
+      auto start = std::chrono::steady_clock::now();
+      send(message);
+      std::this_thread::sleep_until(start + period);
+      }
+      }).detach();
 }
 
 std::pair<std::string, bool> OSC::merge(const std::string& channel, const std::string& action) const {
@@ -197,9 +209,16 @@ std::pair<std::string, bool> OSC::merge(const std::string& channel, const std::s
     }
   } else if (channelType == "lr") {
     path += "/lr";
+  } else if (channelType == "dca") {
+    path += "/dca/";
+    path += std::to_string(std::stoi(channelArg));
   }
   if (action == "fader") {
-    path += "/mix/fader";
+    if (channelType == "dca") {
+      path += "/fader";
+    } else {
+      path += "/mix/fader";
+    }
   } else if (action == "mute") {
     path += "/mix/on";
     inverted = true;
