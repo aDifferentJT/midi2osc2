@@ -1,12 +1,11 @@
 channel:4a:Mixer:input$7
 channel:3a:Mixer:input$6
 channel:Master:Mixer:lr$
-channel:5a:Mixer:input$5
+channel:5a:Mixer:input$8
 channel:8a:Mixer:dca$3
 channel:7a:Mixer:dca$2
 channel:2a:Mixer:input$2
 channel:1a:Mixer:input$1
-channel:6a:Mixer:input$6
 action:Faders:fader
 action:Pot3s:gain
 action:Mutes:mute

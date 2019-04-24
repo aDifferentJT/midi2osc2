@@ -129,8 +129,10 @@ class OSC final : public Output {
     template <typename... Args>
       void send(const std::string& addressPattern, Args... args) { send(Message(addressPattern, args...)); }
     void sendPeriodically(Message message, std::chrono::seconds period = std::chrono::seconds(9));
+    void sendPeriodically(const std::string& addressPattern, std::chrono::seconds period = std::chrono::seconds(9)) override { sendPeriodically(Message(addressPattern), period); }
+    void sendPeriodically(const std::string& addressPattern, float arg, std::chrono::seconds period = std::chrono::seconds(9)) override { sendPeriodically(Message(addressPattern, arg), period); }
     template <typename... Args>
-      void send(const std::string& addressPattern, Args... args, std::chrono::seconds period = std::chrono::seconds(9)) { sendPeriodically(Message(addressPattern, args...), period); }
+      void sendPeriodically(const std::string& addressPattern, Args... args, std::chrono::seconds period = std::chrono::seconds(9)) { sendPeriodically(Message(addressPattern, args...), period); }
     void setCallback(std::function<void(Message)> f) { callback = std::move(f); }
     void setCallback(std::function<void(const std::string&, float)> f) override { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
     std::pair<std::string, bool> merge(const std::string& channel, const std::string& action) const override;

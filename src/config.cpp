@@ -34,7 +34,7 @@ Config::Config(asio::io_context& io_context, const std::string& filename) : gui(
       unsigned short inPort = std::stoi(str.substr(inPortStart, inPortEnd - inPortStart));
       outputs[name] = std::make_unique<OSC>(io_context, address, outPort, inPort);
       if (inPortEnd != std::string::npos) {
-        outputs.at(name)->send(str.substr(inPortEnd + 1));
+        outputs.at(name)->sendPeriodically(str.substr(inPortEnd + 1));
       }
     } else if (type == "midi") {
       std::size_t nameStart = typeEnd + 1;

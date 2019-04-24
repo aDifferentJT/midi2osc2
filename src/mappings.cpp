@@ -131,9 +131,9 @@ void Mappings::midiCallback(Midi::Event event) {
 }
 
 void Mappings::outputCallback(const std::string& path, float v) {
-  std::optional<std::string> control = currentMapping().feedbackFor(path);
+  std::optional<std::pair<std::string, bool>> control = currentMapping().feedbackFor(path);
   if (control) {
-    config.midi->feedback(*control, v);
+    config.midi->feedback(control->first, control->second ? 1.0 - v : v);
   }
 }
 

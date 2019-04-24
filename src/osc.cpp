@@ -220,10 +220,18 @@ std::pair<std::string, bool> OSC::merge(const std::string& channel, const std::s
       path += "/mix/fader";
     }
   } else if (action == "mute") {
-    path += "/mix/on";
+    if (channelType == "dca") {
+      path += "/on";
+    } else {
+      path += "/mix/on";
+    }
     inverted = true;
   } else if (action == "on") {
-    path += "/mix/on";
+    if (channelType == "dca") {
+      path += "/on";
+    } else {
+      path += "/mix/on";
+    }
   } else if (action == "gain") {
     path += "/gain";
   }

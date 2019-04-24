@@ -47,7 +47,7 @@ class Mappings {
         std::unordered_map<std::string, ControlOutput> controls;
         std::unordered_map<std::string, ChannelOutput> channels;
         std::unordered_map<std::string, ActionOutput> actions;
-        std::unordered_map<std::string, std::string> feedbacks;
+        std::unordered_map<std::string, std::pair<std::string, bool>> feedbacks;
       public:
         Mapping(const Config& config, std::string filename) : config(config), filename(std::move(filename)) {}
 
@@ -57,7 +57,7 @@ class Mappings {
 
         std::string encodedMappingOf(const std::string& controlName);
 
-        std::optional<std::string> feedbackFor(const std::string& str) {
+        std::optional<std::pair<std::string, bool>> feedbackFor(const std::string& str) {
           try {
             return feedbacks.at(str);
           } catch (std::out_of_range&) {
@@ -89,7 +89,7 @@ class Mappings {
         void addFeedback(const std::string& control) {
           std::optional<ControlOutput> output = outputFromString(control);
           if (output) {
-            feedbacks[output->path] = control;
+            feedbacks[output->path] = std::make_pair(control, output->inverted);
           }
         }
       private:
