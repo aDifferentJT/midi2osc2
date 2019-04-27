@@ -7,4 +7,3 @@ add_subdirectory(src)
 
 install (TARGETS midi2osc2 DESTINATION bin)
 install (TARGETS midi_console DESTINATION bin)
-

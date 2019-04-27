@@ -1,0 +1,16 @@
+Source: midi2osc2
+Section: sound
+Priority: optional
+Maintainer: midi2osc2 <midi2osc2@kepler22b.uk>
+Build-Depends: cmake, debhelper (>=9), librtmidi-dev, libasio-dev
+Standards-Version: 3.9.8
+Homepage: https://midi2osc.kepler22
+
+Package: midi2osc2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, librtmidi3
+Description: Midi2Osc maps midi devices into osc
+ midi2osc can is run on a device connected to a midi device and maps data
+ between midi and osc. It is configured using a web based interface using
+ websockets.
