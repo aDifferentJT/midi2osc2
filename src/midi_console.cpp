@@ -1,11 +1,9 @@
-//#include <rtmidi/RtMidi.h>  // for RtMidiIn, RtMidi, RtMidi::UNSPECIFIED
-#include <RtMidi.h>  // for RtMidiIn, RtMidi, RtMidi::UNSPECIFIED
+#include <rtmidi/RtMidi.h>  // for RtMidiIn, RtMidi, RtMidi::UNSPECIFIED
 #include <csignal>          // for signal, SIGINT
 #include <future>           // for promise, future
 #include <iomanip>          // for operator<<, setfill, setw
 #include <iostream>         // for operator<<, cout, ostream, basic_ostream
-#include <sstream>          // for operator<<, stringstream
-#include <string>           // for allocator, operator<<
+#include <string>           // for operator<<, allocator, char_traits
 #include <vector>           // for vector
 #include "midi_core.hpp"    // for MidiControl, MidiEvent, MidiControl::Type
 
@@ -46,6 +44,8 @@ class MidiConsole {
       unsigned int portNumber;
       std::cin >> portNumber;
 
+      std::cout << "\x1B""c";
+
       rtMidiIn.openPort(portNumber);
       rtMidiIn.setCallback(&midiCallback);
     }
@@ -55,6 +55,10 @@ class MidiConsole {
       std::cout << "\x1B""c";
       std::cout.flush();
     }
+    MidiConsole(const MidiConsole&) = delete;
+    MidiConsole(MidiConsole&&) = delete;
+    MidiConsole operator=(const MidiConsole&) = delete;
+    MidiConsole operator=(MidiConsole&&) = delete;
 };
 
 std::promise<void> p;

@@ -2,7 +2,7 @@
 #include <algorithm>   // for transform
 #include <iostream>    // for cerr, cout
 #include <iterator>    // for back_insert_iterator, back_inserter
-#include <memory>      // for shared_ptr, __shared_ptr_access, unique_ptr
+#include <memory>      // for unique_ptr
 #include "gui.hpp"     // for GUI
 #include "output.hpp"  // for Output
 #include "utils.hpp"   // for bindOptional, getOpt

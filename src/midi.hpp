@@ -1,10 +1,10 @@
 #ifndef Midi_h
 #define Midi_h
 
-//#include <bits/stdint-uintn.h>  // for uint8_t
-#include <stdint.h>  // PRAGMA IWYU: kepp
-//#include <rtmidi/RtMidi.h>      // for RtMidiIn, RtMidiOut
-#include <RtMidi.h>      // for RtMidiIn, RtMidiOut
+// IWYU pragma: no_include <bits/stdint-uintn.h>
+#include <cstdint> // IWYU pragma: keep
+
+#include <rtmidi/RtMidi.h>      // for RtMidiIn, RtMidiOut
 #include <functional>           // for function
 #include <optional>             // for optional
 #include <set>                  // for set

@@ -9,9 +9,11 @@
 // IWYU pragma: no_include <asio/ip/udp.hpp>
 // IWYU pragma: no_forward_declare asio::io_context
 
-//#include <bits/stdint-intn.h>   // for int32_t
-#include <stdint.h> // PRAGMA IWYU: keep  // for int32_t
+// IWYU pragma: no_include <bits/stdint-intn.h>
+#include <cstdint> // IWYU pragma: keep
+
 #include <algorithm>            // for reverse
+#include <chrono>               // for seconds
 #include <functional>           // for function
 #include <iosfwd>               // for size_t
 #include <string>               // for string
@@ -20,15 +22,6 @@
 #include <variant>              // for variant
 #include <vector>               // for vector, vector<>::iterator
 #include "output.hpp"           // for Output
-
-#include <iostream>
-
-namespace std::endian {
-  enum endianness {
-    little, big
-  };
-  extern endianness native;
-}
 
 using asio::ip::udp;
 
@@ -128,7 +121,7 @@ class OSC final : public Output {
     void send(const std::string& addressPattern, float arg) override { send(Message(addressPattern, arg)); }
     template <typename... Args>
       void send(const std::string& addressPattern, Args... args) { send(Message(addressPattern, args...)); }
-    void sendPeriodically(Message message, std::chrono::seconds period = std::chrono::seconds(9));
+    void sendPeriodically(const Message& message, std::chrono::seconds period = std::chrono::seconds(9));
     void sendPeriodically(const std::string& addressPattern, std::chrono::seconds period = std::chrono::seconds(9)) override { sendPeriodically(Message(addressPattern), period); }
     void sendPeriodically(const std::string& addressPattern, float arg, std::chrono::seconds period = std::chrono::seconds(9)) override { sendPeriodically(Message(addressPattern, arg), period); }
     template <typename... Args>

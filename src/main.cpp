@@ -7,7 +7,7 @@
 
 #include <csignal>                       // for signal, SIGINT
 #include <iostream>                      // for operator<<, endl, basic_ostream
-#include <memory>                        // for allocator, make_shared
+#include <memory>                        // for allocator
 #include "config.hpp"                    // for Config
 #include "mappings.hpp"                  // for Mappings
 

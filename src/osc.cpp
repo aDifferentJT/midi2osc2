@@ -1,21 +1,20 @@
-#include "osc.hpp"
-
 // IWYU pragma: no_include <asio/buffer.hpp>
 // IWYU pragma: no_include <asio/ip/address_v4.hpp>
 // IWYU pragma: no_include <asio/ip/impl/address.ipp>
 
-//#include <bits/stdint-intn.h>        // for int32_t
-#include <stdint.h> // PRAGMA IWYU: keep  // for int32_t
-#include <chrono>
-#include <iostream>                  // for operator<<, endl, basic_ostream
-#include <iterator>                  // for back_insert_iterator, back_inserter
-#include <new>                       // for operator new
-#include <numeric>                   // for accumulate
-#include <system_error>              // for error_code
-#include <thread>
-#include "utils.hpp"                 // for bindMember
+// IWYU pragma: no_include <bits/stdint-intn.h>
+#include <cstdint> // IWYU pragma: keep
 
-std::endian::endianness std::endian::native = std::endian::little;
+#include "osc.hpp"
+#include <chrono>        // for duration, steady_clock, operator+, seconds
+#include <iostream>      // for operator<<, endl, basic_ostream, cerr
+#include <iterator>      // for back_insert_iterator, back_inserter
+#include <new>           // for operator new
+#include <numeric>       // for accumulate
+#include <ratio>         // for ratio
+#include <system_error>  // for error_code
+#include <thread>        // for sleep_until, thread
+#include "utils.hpp"     // for bindMember
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
@@ -174,7 +173,7 @@ void OSC::send(Message message) {
   socket.send_to(asio::buffer(message.toPacket()), udp::endpoint(address, sendPort));
 }
 
-void OSC::sendPeriodically(Message message, std::chrono::seconds period) {
+void OSC::sendPeriodically(const Message& message, std::chrono::seconds period) {
   std::thread([this, message, period]() {
       for (;;) {
       auto start = std::chrono::steady_clock::now();
