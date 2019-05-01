@@ -79,7 +79,7 @@ std::set<uint8_t> Midi::Profile::allLeds() {
 
 void Midi::setLed(uint8_t number, bool value) {
   if (isMock) {
-    config.gui.send("mockSetLed:" + profile.stringFromMidiControl({MidiControl::Type::Button, number}) + ":" + (value ? "true" : "false"));
+    mockCallback(profile.stringFromMidiControl({MidiControl::Type::Button, number}), value);
   } else {
     std::vector<unsigned char> message({0x90, number, value ? static_cast<uint8_t>(0x7F) : static_cast<uint8_t>(0x00)});
     rtMidiOut.sendMessage(&message);
@@ -99,7 +99,7 @@ void Midi::midiCallback(double timeStamp, std::vector<unsigned char>* message, v
   float value;
   switch (event.control.type) {
     case MidiControl::Type::Button:
-      if (control == midi->config.bankLeft || control == midi->config.bankRight) {
+      if (control == midi->config->bankLeft || control == midi->config->bankRight) {
         value = std::get<bool>(event.value) ? 1.0 : 0.0;
       } else {
         if (std::get<bool>(event.value)) {
@@ -138,11 +138,10 @@ void Midi::midiCallback(double timeStamp, std::vector<unsigned char>* message, v
   }
 }
 
-Midi::Midi(const std::string& deviceName, const std::string& profileFilename, Config& config)
+Midi::Midi(const std::string& deviceName, const std::string& profileFilename)
   : rtMidiIn(RtMidi::UNSPECIFIED, "midi2osc2")
   , rtMidiOut(RtMidi::UNSPECIFIED, "midi2osc2")
   , profile(profileFilename)
-    , config(config)
     , isMock(deviceName == "mock")
 {
   if (!isMock) {

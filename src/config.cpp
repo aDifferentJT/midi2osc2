@@ -8,7 +8,16 @@
 namespace asio { class io_context; }
 #include <fstream> // IWYU pragma: keep
 
-Config::Config(asio::io_context& io_context, const std::string& filename) : gui(io_context) {
+Config Config::parse(asio::io_context& io_context, const std::string& filename) {
+  auto gui = std::make_unique<GUI>(io_context);
+  std::unordered_map<std::string, std::unique_ptr<Output>> outputs;
+  std::unique_ptr<Midi> midi;
+  std::vector<std::string> banks;
+  std::string bankLeft;
+  std::string bankRight;
+  std::vector<Group> channelGroups;
+  std::vector<Group> actionGroups;
+
   std::ifstream f(filename);
   while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
     while (std::isspace(f.peek()) != 0) { f.ignore(); }
@@ -20,30 +29,10 @@ Config::Config(asio::io_context& io_context, const std::string& filename) : gui(
     std::size_t typeEnd = str.find(':');
     std::string type = str.substr(0, typeEnd);
     if (type == "osc") {
-      std::size_t nameStart = typeEnd + 1;
-      std::size_t nameEnd = str.find(':', nameStart);
-      std::string name = str.substr(nameStart, nameEnd - nameStart);
-      std::size_t addressStart = nameEnd + 1;
-      std::size_t addressEnd = str.find(':', addressStart);
-      std::string address = str.substr(addressStart, addressEnd - addressStart);
-      std::size_t outPortStart = addressEnd + 1;
-      std::size_t outPortEnd = str.find(':', outPortStart);
-      unsigned short outPort = std::stoi(str.substr(outPortStart, outPortEnd - outPortStart));
-      std::size_t inPortStart = outPortEnd + 1;
-      std::size_t inPortEnd = str.find(':', inPortStart);
-      unsigned short inPort = std::stoi(str.substr(inPortStart, inPortEnd - inPortStart));
-      outputs[name] = std::make_unique<OSC>(io_context, address, outPort, inPort);
-      if (inPortEnd != std::string::npos) {
-        outputs.at(name)->sendPeriodically(str.substr(inPortEnd + 1));
-      }
+      auto osc = parseOSC(io_context, str, typeEnd + 1);
+      outputs[osc.first] = std::move(osc.second);
     } else if (type == "midi") {
-      std::size_t nameStart = typeEnd + 1;
-      std::size_t nameEnd = str.find(':', nameStart);
-      std::string name = str.substr(nameStart, nameEnd - nameStart);
-      std::size_t profileStart = nameEnd + 1;
-      std::size_t profileEnd = str.find(':', profileStart);
-      std::string profile = str.substr(profileStart, profileEnd - profileStart);
-      midi = std::make_unique<Midi>(name, profile, *this);
+      midi = parseMidi(str, typeEnd + 1);
     } else if (type == "bank") {
       banks.push_back(str.substr(typeEnd + 1));
     } else if (type == "bankLeft") {
@@ -51,31 +40,9 @@ Config::Config(asio::io_context& io_context, const std::string& filename) : gui(
     } else if (type == "bankRight") {
       bankRight = str.substr(typeEnd + 1);
     } else if (type == "channelGroup") {
-      std::size_t nameStart = typeEnd + 1;
-      std::size_t nameEnd = str.find(':', nameStart);
-      std::string name = str.substr(nameStart, nameEnd - nameStart);
-      std::set<std::string> controls;
-      std::size_t controlEnd = nameEnd;
-      std::size_t controlStart;
-      do {
-        controlStart = controlEnd + 1;
-        controlEnd = str.find(',', controlStart);
-        controls.insert(str.substr(controlStart, controlEnd - controlStart));
-      } while (controlEnd != std::string::npos);
-      channelGroups.emplace_back(name, controls);
+      channelGroups.push_back(parseGroup(str, typeEnd + 1));
     } else if (type == "actionGroup") {
-      std::size_t nameStart = typeEnd + 1;
-      std::size_t nameEnd = str.find(':', nameStart);
-      std::string name = str.substr(nameStart, nameEnd - nameStart);
-      std::set<std::string> controls;
-      std::size_t controlEnd = nameEnd;
-      std::size_t controlStart;
-      do {
-        controlStart = controlEnd + 1;
-        controlEnd = str.find(',', controlStart);
-        controls.insert(str.substr(controlStart, controlEnd - controlStart));
-      } while (controlEnd != std::string::npos);
-      actionGroups.emplace_back(name, controls);
+      actionGroups.push_back(parseGroup(str, typeEnd + 1));
     } else {
       std::cerr << "Cannot parse line: " << str << std::endl;
     }
@@ -84,5 +51,48 @@ Config::Config(asio::io_context& io_context, const std::string& filename) : gui(
     std::cerr << "No midi device given in config file" << std::endl;
     throw;
   }
+  return Config(
+    std::move(gui),
+    std::move(outputs),
+    std::move(midi),
+    std::move(banks),
+    std::move(bankLeft),
+    std::move(bankRight),
+    std::move(channelGroups),
+    std::move(actionGroups)
+    );
+}
+
+#define parseUnit(unit, str, start) std::size_t unit##Start = start; std::size_t unit##End = str.find(':', unit##Start); std::string unit = str.substr(unit##Start, unit##End - unit##Start)
+
+std::pair<std::string, std::unique_ptr<Output>> Config::parseOSC(asio::io_context& io_context, std::string str, std::size_t start) {
+  parseUnit(name, str, start);
+  parseUnit(address, str, nameEnd + 1);
+  parseUnit(outPort, str, addressEnd + 1);
+  parseUnit(inPort, str, outPortEnd + 1);
+  std::unique_ptr<OSC> osc = std::make_unique<OSC>(io_context, address, std::stoi(outPort), std::stoi(inPort));
+  if (inPortEnd != std::string::npos) {
+    osc->sendPeriodically(str.substr(inPortEnd + 1));
+  }
+  return std::make_pair(name, std::move(osc));
+}
+
+std::unique_ptr<Midi> Config::parseMidi(std::string str, std::size_t start) {
+  parseUnit(name, str, start);
+  parseUnit(profile, str, nameEnd + 1);
+  return std::make_unique<Midi>(name, profile);
+}
+
+Config::Group Config::parseGroup(std::string str, std::size_t start) {
+  parseUnit(name, str, start);
+  std::set<std::string> controls;
+  std::size_t controlEnd = nameEnd;
+  std::size_t controlStart;
+  do {
+    controlStart = controlEnd + 1;
+    controlEnd = str.find(',', controlStart);
+    controls.insert(str.substr(controlStart, controlEnd - controlStart));
+  } while (controlEnd != std::string::npos);
+  return Group(name, controls);
 }
 

@@ -43,11 +43,13 @@ class Midi {
     RtMidiOut rtMidiOut;
     unsigned int portNumber;
     std::function<void(Event)> callback = [](Event e){ (void)e; };
+    std::function<void(std::string, bool)> mockCallback = [](std::string led, bool value){ (void)led; (void)value; };
     std::unordered_map<uint8_t, bool> buttonStates;
     std::unordered_map<uint8_t, FaderState> faderStates;
     Profile profile;
 
-    Config& config;
+  public:
+    Config* config; // TODO this is never initialised
 
     void setLed(uint8_t number, bool value);
 
@@ -55,15 +57,16 @@ class Midi {
   public:
     const bool isMock;
 
-    Midi(const std::string& deviceName, const std::string& profileFilename, Config& config);
+    Midi(const std::string& deviceName, const std::string& profileFilename);
     Midi(const Midi&) = delete;
     Midi& operator =(const Midi&) = delete;
     Midi(Midi&& other) = default;
-    Midi& operator =(Midi&&) = delete;
+    Midi& operator =(Midi&&) = default;
     ~Midi();
 
     void feedback(const std::string& controlS, float v);
     void setCallback(std::function<void(Event)> f) { callback = std::move(f); }
+    void setMockCallback(std::function<void(std::string, bool)> f) { mockCallback = std::move(f); }
 
     void setLed(const std::string& control, bool value) { setLed(profile.controlFromString(control).number, value); }
 

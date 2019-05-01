@@ -11,6 +11,7 @@
 #include <vector>         // for vector
 #include "config.hpp"     // for Config
 #include "midi.hpp"       // for Midi::Event, Midi
+#include "utils.hpp"
 
 class Mappings {
   private:
@@ -49,9 +50,10 @@ class Mappings {
         std::unordered_map<std::string, ActionOutput> actions;
         std::unordered_map<std::string, std::pair<std::string, bool>> feedbacks;
       public:
-        Mapping(const Config& config, std::string filename) : config(config), filename(std::move(filename)) {}
+        Mapping(const Config& config, const std::string& filename);
+        Mapping() = delete;
 
-        void write() const;
+        void save() const;
 
         std::optional<ControlOutput> outputFromString(const std::string& str);
 
@@ -115,14 +117,19 @@ class Mappings {
     void refreshBank();
 
     void midiCallback(Midi::Event event);
+    void midiMockCallback(std::string led, bool value);
     void outputCallback(const std::string& path, float v);
     void guiOpenCallback();
     void guiRecvCallback(const std::string& str);
+
+    void load() {
+      std::transform(config.banks.begin(), config.banks.end(), std::back_inserter(mappings), bindFirst<Mapping, const Config&, std::string>(constructor<Mapping, const Config&, std::string>(), this->config));
+    }
   public:
     Mappings(Config& config);
-    void write() {
+    void save() {
       for (const Mapping& mapping : mappings) {
-        mapping.write();
+        mapping.save();
       }
     }
 };

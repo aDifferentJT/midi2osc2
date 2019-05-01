@@ -34,9 +34,9 @@ GUI::GUI(asio::io_context& io_context) {
     server.listen(8080);
     server.start_accept();
   } catch (websocketpp::exception const & e) {
-    std::cout << e.what() << std::endl;
+    std::cerr << e.what() << std::endl;
   } catch (...) {
-    std::cout << "other exception" << std::endl;
+    std::cerr << "other exception" << std::endl;
   }
 }
 

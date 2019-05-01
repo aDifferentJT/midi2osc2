@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     throw;
   }
 
-  Config config(io_context, argv[1]);
+  Config config = Config::parse(io_context, argv[1]);
 
   Mappings mappings(config);
 
