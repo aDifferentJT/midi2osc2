@@ -10,18 +10,21 @@
 // IWYU pragma: no_forward_declare asio::io_context
 
 // IWYU pragma: no_include <bits/stdint-intn.h>
+// IWYU pragma: no_include <bits/stdint-uintn.h>
 #include <cstdint> // IWYU pragma: keep
 
-#include <algorithm>            // for reverse
-#include <chrono>               // for seconds
-#include <functional>           // for function
-#include <iosfwd>               // for size_t
-#include <string>               // for string
-#include <type_traits>          // for endian, endian::little, endian::native
-#include <utility>              // for move, pair
-#include <variant>              // for variant
-#include <vector>               // for vector, vector<>::iterator
-#include "output.hpp"           // for Output
+#include <algorithm>    // for reverse, find, transform
+#include <chrono>       // for seconds
+#include <functional>   // for function
+#include <iostream>     // for size_t, operator<<, endl, basic_ostream, cerr
+#include <string>       // for string, allocator, operator==, basic_string
+#include <thread>       // for thread
+#include <type_traits>  // for endian, endian::little, endian::native, remov...
+#include <utility>      // for move, pair
+#include <variant>      // for variant
+#include <vector>       // for vector, vector<>::iterator
+#include "output.hpp"   // for Output
+#include "utils.hpp"    // for bindMember, visit
 
 using asio::ip::udp;
 
@@ -37,9 +40,15 @@ class OSC final : public Output {
         std::string addressPattern;
         std::vector<Type> types;
         std::vector<Argument> arguments;
-        Message(std::string  addressPattern, std::vector<Type>  types, std::vector<Argument>  arguments)
-          : addressPattern(std::move(std::move(addressPattern))), types(std::move(std::move(types))), arguments(std::move(std::move(arguments))) {}
+        Message(std::string addressPattern, std::vector<Type> types, std::vector<Argument> arguments)
+          : addressPattern(std::move(addressPattern)), types(std::move(types)), arguments(std::move(arguments)) {}
       private:
+        template <typename T> static Type forType();
+        template <> Type forType<int>              () { return Type::i; }
+        template <> Type forType<float>            () { return Type::f; }
+        template <> Type forType<std::string>      () { return Type::s; }
+        template <> Type forType<std::vector<char>>() { return Type::b; }
+
         template <typename T>
           static std::vector<char> makeOSCnum(T v) {
             char* p = (char*)&v;
@@ -74,34 +83,100 @@ class OSC final : public Output {
             }
             return v;
           }
+
         static std::vector<char> makeTypeTagString(std::vector<Type> types);
         static std::vector<char> makeArgument(Argument arg);
         static std::vector<char> makeArguments(std::vector<Argument> arg);
       public:
         explicit Message(std::string addressPattern) : addressPattern(std::move(std::move(addressPattern))) {}
-        template <typename... Args>
-          Message(std::string addressPattern, int arg, Args... args) : Message(std::move(addressPattern), args...) {
-            types.insert(types.begin(), Type::i);
+        template <typename T, typename... Args>
+          Message(std::string addressPattern, T arg, Args... args) : Message(std::move(addressPattern), args...) {
+            types.insert(types.begin(), forType<T>());
             arguments.insert(arguments.begin(), arg);
           }
-        template <typename... Args>
-          Message(std::string addressPattern, float arg, Args... args) : Message(addressPattern, args...) {
-            types.insert(types.begin(), Type::f);
-            arguments.insert(arguments.begin(), arg);
+      private:
+        template <typename It>
+          static std::optional<Message> parse(It begin, It end) {
+            auto addressPatternEnd = std::find(begin, end, '\0');
+            std::string addressPattern(begin, addressPatternEnd);
+            std::size_t addressPatternPad = 4 - ((addressPatternEnd - begin) % 4);
+            auto typeTagStringBegin = addressPatternEnd + addressPatternPad;
+            if (*typeTagStringBegin != ',') {
+              std::cerr << "Missing Type Tag String" << std::endl;
+              return std::nullopt;
+            }
+            auto typeTagStringEnd = std::find(typeTagStringBegin, end, '\0');
+            std::vector<Type> types(typeTagStringEnd - (typeTagStringBegin + 1));
+            try {
+              std::transform(typeTagStringBegin + 1, typeTagStringEnd, types.begin(), [](char t){ switch (t) {
+                case 'i': return Type::i;
+                case 'f': return Type::f;
+                case 's': return Type::s;
+                case 'b': return Type::b;
+                default: throw 0;
+              }});
+            } catch (int x) {
+              return std::nullopt;
+            }
+            std::size_t typeTagStringPad = 4 - ((typeTagStringEnd - typeTagStringBegin) % 4);
+            char* argumentsIt = &*(typeTagStringEnd + typeTagStringPad);
+            std::vector<Argument> arguments;
+            for (Type t : types) {
+              switch (t) {
+                case Type::i:
+                  arguments.emplace_back(unmakeOSCnum<int32_t>(argumentsIt));
+                  argumentsIt += sizeof(int32_t);
+                  break;
+                case Type::f:
+                  arguments.emplace_back(unmakeOSCnum<float>(argumentsIt));
+                  argumentsIt += sizeof(float);
+                  break;
+                case Type::s:
+                  {
+                    std::string str(argumentsIt);
+                    arguments.emplace_back(str);
+                    std::size_t n = str.size();
+                    std::size_t pad = 4 - (n % 4);
+                    argumentsIt += n + pad;
+                  }
+                  break;
+                case Type::b:
+                  {
+                    int32_t n = *reinterpret_cast<int32_t*>(argumentsIt);
+                    argumentsIt += sizeof(int32_t);
+                    std::vector<char> v(argumentsIt, argumentsIt + n);
+                    arguments.emplace_back(v);
+                    std::size_t pad = 4 - (n % 4);
+                    argumentsIt += n + pad;
+                  }
+                  break;
+              }
+            }
+            return Message(std::move(addressPattern), std::move(types), std::move(arguments));
           }
-        template <typename... Args>
-          Message(std::string addressPattern, std::string arg, Args... args) : Message(addressPattern, args...) {
-            types.insert(types.begin(), Type::s);
-            arguments.insert(arguments.begin(), arg);
+
+      public:
+        template <typename It>
+          static std::vector<Message> getMessages(It begin, It end) {
+            if (std::string(begin, begin + 8) == "#bundle") {
+              auto it = begin + 16;
+              std::vector<OSC::Message> messages;
+              while (it < end) {
+                auto size = unmakeOSCnum<uint32_t>(&*it);
+                auto newMessages = getMessages(it, it + size);
+                messages.insert(messages.end(), newMessages.begin(), newMessages.end());
+              }
+              return messages;
+            }
+            if (auto m = Message::parse(begin, end)) {
+              return std::vector({*m});
+            }
+            return std::vector<Message>();
           }
-        template <typename... Args>
-          Message(std::string addressPattern, std::vector<char> arg, Args... args) : Message(addressPattern, args...) {
-            types.insert(types.begin(), Type::b);
-            arguments.insert(arguments.begin(), arg);
-          }
+
+        static std::vector<Message> getMessages(std::vector<char> packet);
         std::vector<char> toPacket();
-        explicit Message(std::vector<char> packet);
-        float toFloat();
+        std::optional<float> toFloat();
     };
   private:
     asio::io_context& io_context;
@@ -110,10 +185,12 @@ class OSC final : public Output {
     const asio::ip::address address;
     udp::socket socket;
 
-    std::function<void(Message)> callback = [](Message m){ (void)m; };
+    std::function<void(Message)> callback = Const<void>();
     std::vector<char> recvBuffer;
     udp::socket::endpoint_type recvEndpoint;
     void recvHandler(const asio::error_code& error, std::size_t count_recv);
+
+    std::vector<std::thread> periodicSends;
   public:
     OSC(asio::io_context& io_context, const std::string& ip, unsigned short sendPort, unsigned short recvPort);
     void send(Message message);
@@ -127,7 +204,13 @@ class OSC final : public Output {
     template <typename... Args>
       void sendPeriodically(const std::string& addressPattern, Args... args, std::chrono::seconds period = std::chrono::seconds(9)) { sendPeriodically(Message(addressPattern, args...), period); }
     void setCallback(std::function<void(Message)> f) { callback = std::move(f); }
-    void setCallback(std::function<void(const std::string&, float)> f) override { callback = [f](Message msg) { f(msg.addressPattern, msg.toFloat()); }; }
+    void setCallback(std::function<void(const std::string&, float)> f) override {
+      callback = [f](Message msg) {
+        if (auto flt = msg.toFloat()) {
+          f(msg.addressPattern, *flt);
+        }
+      };
+    }
     std::pair<std::string, bool> merge(const std::string& channel, const std::string& action) const override;
 };
 

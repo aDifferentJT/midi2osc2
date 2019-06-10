@@ -20,8 +20,7 @@ extern "C" void stop(int sig) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cerr << "Missing command line argument" << std::endl;
-    throw;
+    throw std::runtime_error("Missing command line argument");
   }
 
   Config config = Config::parse(io_context, argv[1]);

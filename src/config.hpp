@@ -66,9 +66,9 @@ class Config {
       return std::find_if(actionGroups.begin(), actionGroups.end(), [action](Group g) { return g.name == action; })->controls;
     }
   private:
-    static std::pair<std::string, std::unique_ptr<Output>> parseOSC(asio::io_context& io_context, std::string str, std::size_t start);
-    static std::unique_ptr<Midi> parseMidi(std::string str, std::size_t start);
-    static Group parseGroup(std::string str, std::size_t start);
+    static std::pair<std::string, std::unique_ptr<Output>> parseOSC(asio::io_context& io_context, const std::string& str, std::size_t start);
+    static std::unique_ptr<Midi> parseMidi(const std::string& str, std::size_t start);
+    static Group parseGroup(const std::string& str, std::size_t start);
 };
 
 #endif

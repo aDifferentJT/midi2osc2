@@ -6,6 +6,7 @@
 
 #include <rtmidi/RtMidi.h>      // for RtMidiIn, RtMidiOut
 #include <functional>           // for function
+#include <mutex>                // for mutex
 #include <optional>             // for optional
 #include <set>                  // for set
 #include <string>               // for string
@@ -13,6 +14,7 @@
 #include <utility>              // for move
 #include <vector>               // for vector
 #include "midi_core.hpp"        // for MidiControl
+#include "utils.hpp"
 class Config;
 
 class Midi {
@@ -42,18 +44,22 @@ class Midi {
     RtMidiIn rtMidiIn;
     RtMidiOut rtMidiOut;
     unsigned int portNumber;
-    std::function<void(Event)> callback = [](Event e){ (void)e; };
-    std::function<void(std::string, bool)> mockCallback = [](std::string led, bool value){ (void)led; (void)value; };
+    std::function<void(const Event&)> callback = Const<void>();
+    std::function<void(const std::string&, bool)> mockCallback = Const<void>();
     std::unordered_map<uint8_t, bool> buttonStates;
     std::unordered_map<uint8_t, FaderState> faderStates;
+    static std::mutex faderStateMutex;
     Profile profile;
 
   public:
-    Config* config; // TODO this is never initialised
+    Config* config; // TODO initialise this more nicely
+  private:
 
     void setLed(uint8_t number, bool value);
 
     static void midiCallback(double timeStamp, std::vector<unsigned char>* message, void* userData);
+    static void midiErrorCallback(RtMidiError::Type type, const std::string &errorText, void *userData);
+
   public:
     const bool isMock;
 
@@ -61,16 +67,16 @@ class Midi {
     Midi(const Midi&) = delete;
     Midi& operator =(const Midi&) = delete;
     Midi(Midi&& other) = default;
-    Midi& operator =(Midi&&) = default;
+    Midi& operator =(Midi&&) = delete;
     ~Midi();
 
     void feedback(const std::string& controlS, float v);
-    void setCallback(std::function<void(Event)> f) { callback = std::move(f); }
-    void setMockCallback(std::function<void(std::string, bool)> f) { mockCallback = std::move(f); }
+    void setCallback(std::function<void(const Event&)> f) { callback = std::move(f); }
+    void setMockCallback(std::function<void(const std::string&, bool)> f) { mockCallback = std::move(f); }
 
     void setLed(const std::string& control, bool value) { setLed(profile.controlFromString(control).number, value); }
 
-    void recvMockMoved(Event e) { if (!isMock) { throw; } callback(std::move(e)); }
+    void recvMockMoved(const Event& e) { if (!isMock) { throw std::runtime_error("Mock message received but mock not active"); } callback(e); }
 
     friend class MidiConsole;
 };

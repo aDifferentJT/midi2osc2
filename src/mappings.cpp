@@ -1,82 +1,44 @@
 #include "mappings.hpp"
-#include <algorithm>   // for transform
-#include <iostream>    // for cerr, cout
-#include <iterator>    // for back_insert_iterator, back_inserter
+#include <iostream>    // for cerr
 #include <memory>      // for unique_ptr
 #include "gui.hpp"     // for GUI
 #include "output.hpp"  // for Output
-#include "utils.hpp"   // for bindOptional, getOpt
+#include "utils.hpp"   // for parseUnit, bindMember, bindOptional, getOpt
 
-Mappings::ControlOutput::ControlOutput(const std::string& str, std::size_t start)
-  : output([str, start]() {
-    std::size_t outputStart = start;
-    std::size_t outputEnd = str.find(':', outputStart);
-    return str.substr(outputStart, outputEnd - outputStart);
-  }())
-, path([str, start]() {
-  std::size_t outputStart = start;
-  std::size_t outputEnd = str.find(':', outputStart);
-  std::size_t pathStart = outputEnd + 1;
-  std::size_t pathEnd = str.find(':', pathStart);
-  return str.substr(pathStart, pathEnd - pathStart);
-}())
-, inverted([str, start]() {
-  std::size_t outputStart = start;
-  std::size_t outputEnd = str.find(':', outputStart);
-  std::size_t pathStart = outputEnd + 1;
-  std::size_t pathEnd = str.find(':', pathStart);
-  std::size_t invertedStart = pathEnd + 1;
-  std::size_t invertedEnd = str.find(':', invertedStart);
-  return str.substr(invertedStart, invertedEnd - invertedStart) == "true";
-}()) {}
+Mappings::ControlOutput Mappings::ControlOutput::parse(const std::string& str, std::size_t start) {
+  parseUnit(output, str, start);
+  parseUnit(path, str, outputEnd + 1);
+  parseUnit(inverted, str, pathEnd + 1);
+  return ControlOutput(output, path, inverted == "true");
+}
 
-Mappings::ChannelOutput::ChannelOutput(const std::string& str, std::size_t start)
-  : output([str, start]() {
-    std::size_t outputStart = start;
-    std::size_t outputEnd = str.find(':', outputStart);
-    return str.substr(outputStart, outputEnd - outputStart);
-  }())
-, channel([str, start]() {
-  std::size_t outputStart = start;
-  std::size_t outputEnd = str.find(':', outputStart);
-  std::size_t channelStart = outputEnd + 1;
-  std::size_t channelEnd = str.find(':', channelStart);
-  return str.substr(channelStart, channelEnd - channelStart);
-}()) {}
+Mappings::ChannelOutput Mappings::ChannelOutput::parse(const std::string& str, std::size_t start) {
+  parseUnit(output, str, start);
+  parseUnit(channel, str, outputEnd + 1);
+  return ChannelOutput(output, channel);
+}
 
-Mappings::ActionOutput::ActionOutput(const std::string& str, std::size_t start) 
-  : action([str, start]() {
-    std::size_t actionStart = start;
-    std::size_t actionEnd = str.find(':', actionStart);
-    return str.substr(actionStart, actionEnd - actionStart);
-  }()) {}
+Mappings::ActionOutput Mappings::ActionOutput::parse(const std::string& str, std::size_t start) {
+  parseUnit(action, str, start);
+  return ActionOutput(action);
+}
 
 Mappings::Mapping::Mapping(const Config& config, const std::string& filename) : config(config), filename(filename) {
   std::ifstream f(filename);
   while (!f.eof() && f.peek() != std::char_traits<char>::eof()) {
     std::string line;
     std::getline(f, line);
-    std::size_t typeStart = 0;
-    std::size_t typeEnd = line.find(':', typeStart);
-    std::string type = line.substr(typeStart, typeEnd - typeStart);
+    parseUnit(type, line, 0);
+    parseUnit(name, line, typeEnd + 1);
     if (type == "control") {
-      std::size_t controlStart = typeEnd + 1;
-      std::size_t controlEnd = line.find(':', controlStart);
-      std::string control = line.substr(controlStart, controlEnd - controlStart);
-      addControl(control, ControlOutput(line, controlEnd + 1));
-      addFeedback(control);
+      addControl(name, ControlOutput::parse(line, nameEnd + 1));
+      addFeedback(name);
     } else if (type == "channel") {
-      std::size_t channelStart = typeEnd + 1;
-      std::size_t channelEnd = line.find(':', channelStart);
-      std::string channel = line.substr(channelStart, channelEnd - channelStart);
-      addChannel(channel, ChannelOutput(line, channelEnd + 1));
-      addFeedbackForChannel(channel);
+      addChannel(name, ChannelOutput::parse(line, nameEnd + 1));
+      addFeedbackForChannel(name);
     } else if (type == "action") {
-      std::size_t actionStart = typeEnd + 1;
-      std::size_t actionEnd = line.find(':', actionStart);
-      std::string action = line.substr(actionStart, actionEnd - actionStart);
-      addAction(action, ActionOutput(line, actionEnd + 1));
-      addFeedbackForAction(action);
+      addAction(name, ActionOutput::parse(line, nameEnd + 1));
+      addFeedbackForAction(name);
     }
   }
 }
@@ -105,7 +67,7 @@ std::optional<Mappings::ControlOutput> Mappings::Mapping::outputFromString(const
       std::pair<std::string, bool> merged = config.outputs.at(channel.output)->merge(channel.channel, action.action);
       return ControlOutput(channel.output, merged.first, merged.second);
     } catch (std::out_of_range&) {
-      std::cerr << "Control not mapped: " << str << std::endl;
+      //std::cerr << "Control not mapped: " << str << std::endl;
       return std::nullopt;
     }
   }
@@ -140,7 +102,7 @@ void Mappings::refreshBank() {
   }
 }
 
-void Mappings::midiCallback(Midi::Event event) {
+void Mappings::midiCallback(const Midi::Event& event) {
   if (event.control == config.bankLeft) {
     if (currentMappingIndex > 0) {
       currentMappingIndex -= 1;
@@ -160,7 +122,7 @@ void Mappings::midiCallback(Midi::Event event) {
   }
 }
 
-void Mappings::midiMockCallback(std::string led, bool value) {
+void Mappings::midiMockCallback(const std::string& led, bool value) {
   config.gui->send("mockSetLed:" + led + ":" + (value ? "true" : "false"));
 }
 
@@ -185,69 +147,45 @@ void Mappings::guiOpenCallback() {
 }
 
 void Mappings::guiRecvCallback(const std::string& str) {
-  std::size_t commandStart = 0;
-  std::size_t commandEnd = str.find(':', commandStart);
-  std::string command = str.substr(commandStart, commandEnd - commandStart);
+  parseUnit(command, str, 0);
+  parseUnit(name, str, commandEnd + 1);
   if (command == "setControl") {
-    std::size_t controlStart = commandEnd + 1;
-    std::size_t controlEnd = str.find(':', controlStart);
-    std::string control = str.substr(controlStart, controlEnd - controlStart);
-    currentMapping().addControl(control, ControlOutput(str, controlEnd + 1));
-    currentMapping().addFeedback(control);
+    currentMapping().addControl(name, ControlOutput::parse(str, nameEnd + 1));
+    currentMapping().addFeedback(name);
   } else if (command == "clearControl") {
-    std::size_t controlStart = commandEnd + 1;
-    std::size_t controlEnd = str.find(':', controlStart);
-    std::string control = str.substr(controlStart, controlEnd - controlStart);
-    currentMapping().removeControl(control);
-    currentMapping().addFeedback(control);
+    currentMapping().removeControl(name);
+    currentMapping().addFeedback(name);
   } else if (command == "setChannel") {
-    std::size_t channelStart = commandEnd + 1;
-    std::size_t channelEnd = str.find(':', channelStart);
-    std::string channel = str.substr(channelStart, channelEnd - channelStart);
-    currentMapping().addChannel(channel, ChannelOutput(str, channelEnd + 1));
-    currentMapping().addFeedbackForChannel(channel);
+    currentMapping().addChannel(name, ChannelOutput::parse(str, nameEnd + 1));
+    currentMapping().addFeedbackForChannel(name);
   } else if (command == "clearChannel") {
-    std::size_t channelStart = commandEnd + 1;
-    std::size_t channelEnd = str.find(':', channelStart);
-    std::string channel = str.substr(channelStart, channelEnd - channelStart);
-    currentMapping().removeChannel(channel);
-    currentMapping().addFeedbackForChannel(channel);
+    currentMapping().removeChannel(name);
+    currentMapping().addFeedbackForChannel(name);
   } else if (command == "setAction") {
-    std::size_t actionStart = commandEnd + 1;
-    std::size_t actionEnd = str.find(':', actionStart);
-    std::string action = str.substr(actionStart, actionEnd - actionStart);
-    currentMapping().addAction(action, ActionOutput(str, actionEnd + 1));
-    currentMapping().addFeedbackForAction(action);
+    currentMapping().addAction(name, ActionOutput::parse(str, nameEnd + 1));
+    currentMapping().addFeedbackForAction(name);
   } else if (command == "clearAction") {
-    std::size_t actionStart = commandEnd + 1;
-    std::size_t actionEnd = str.find(':', actionStart);
-    std::string action = str.substr(actionStart, actionEnd - actionStart);
-    currentMapping().removeAction(action);
-    currentMapping().addFeedbackForAction(action);
+    currentMapping().removeAction(name);
+    currentMapping().addFeedbackForAction(name);
   } else if (command == "echo") {
     config.gui->send(str);
   } else if (command == "bankChange") {
-    std::size_t directionStart = commandEnd + 1;
-    std::size_t directionEnd = str.find(':', directionStart);
-    std::string direction = str.substr(directionStart, directionEnd - directionStart);
+    parseUnit(direction, str, commandEnd + 1);
+    parseUnit(control, str, directionEnd + 1);
 
-    std::size_t controlStart = directionEnd + 1;
-    std::size_t controlEnd = str.find(':', controlStart);
-    std::string controlName = str.substr(controlStart, controlEnd - controlStart);
-
-    if (direction=="left") {
+    if (direction == "left") {
       if (currentMappingIndex > 0) {
         currentMappingIndex -= 1;
       }
-    } else if (direction=="right") {
+    } else if (direction == "right") {
       if (currentMappingIndex < mappings.size() - 1) {
         currentMappingIndex += 1;
       }
     }
     refreshBank();
-    if (!controlName.empty()) {
+    if (!control.empty()) {
       //send the named control data again after the bank switch has been made
-      config.gui->send("moved:" + controlName + ":unchanged:" + currentMapping().encodedMappingOf(controlName));
+      config.gui->send("moved:" + control + ":unchanged:" + currentMapping().encodedMappingOf(control));
     }
   } else if (command == "mockMoved") {
     std::size_t controlStart = commandEnd + 1;

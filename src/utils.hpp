@@ -3,8 +3,37 @@
 
 #include <functional>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <variant>
+
+template <typename... Fs>
+struct overloaded : Fs... {
+  using Fs::operator()...;
+  overloaded(Fs... fs) : Fs(fs)... {};
+};
+template <typename... Fs> overloaded(Fs...) -> overloaded<Fs...>;
+
+template <typename T, typename... Ts, typename F, typename... Fs>
+void checkVisitTypes(std::variant<T> var, F f) {
+  (void)var;
+  if (false) {
+    f(std::get<T>(var));
+  }
+}
+template <typename T, typename... Ts, typename F, typename... Fs>
+void checkVisitTypes(std::variant<T, Ts...> var, F f, Fs... fs) {
+  if (false) {
+    f(std::get<T>(var));
+    checkVisitTypes(std::variant<Ts...>(), fs...);
+  }
+}
+
+template <typename R, typename... Ts, typename... Fs>
+R visit(std::variant<Ts...> var, Fs... fs) {
+  checkVisitTypes(var, fs...);
+  return std::visit(overloaded(fs...), var);
+}
 
 template <typename T, typename U>
 std::optional<T> bindOptional(std::optional<U> x, std::function<T(U*)> f) { return x ? std::optional<T>(f(&*x)) : std::nullopt; }
@@ -18,10 +47,11 @@ std::optional<U> getOpt(std::unordered_map<T,U> xs, T x) {
   }
 }
 
-template <typename T, typename... Args>
-constexpr std::function<T(Args...)> constructor() {
-  return [](Args... args) { return T(args...); };
-}
+template <typename T>
+struct Constructor {
+  template <typename... Args>
+    T operator() (const Args&... args) const { return T(args...); };
+};
 
 template <typename R, typename T, typename... Args>
 constexpr std::function<R(Args...)> bindMember(R (T::*f)(Args...), T* t) {
@@ -33,8 +63,8 @@ constexpr std::function<R(Args...)> bindFirst(R (*f)(Arg, Args...), Arg arg) {
   return [f, arg](Args... args) { return (*f)(arg, args...); };
 }
 
-template <typename R, typename Arg, typename... Args>
-constexpr std::function<R(Args...)> bindFirst(std::function<R(Arg, Args...)> f, Arg arg) {
+template <typename R, typename Arg, typename... Args, typename T>
+constexpr std::function<R(Args...)> bindFirst(T f, Arg arg) {
   return [f, &arg](Args... args) { return f(arg, args...); };
 }
 
@@ -51,5 +81,66 @@ std::vector<char> data_from_variant(V var) {
   }
   return data_from_variant<I+1>(var);
 }
+
+constexpr void ignore() {}
+
+template <typename Arg, typename... Args>
+constexpr void ignore(Arg arg, Args... args) {
+  (void)arg;
+  ignore(args...);
+}
+
+template <typename R>
+struct Const {
+  R ret;
+  Const(R ret) : ret(ret) {}
+  template <typename... Args>
+    R operator() (Args... args) const {
+      ignore(args...);
+      return ret;
+    }
+};
+
+template <>
+struct Const<void> {
+  Const() {}
+  template <typename... Args>
+    void operator() (Args... args) const {
+      ignore(args...);
+      return;
+    }
+};
+
+template <typename R, typename... Args>
+constexpr std::function<R(Args...)> ConstThrow(std::exception&& e) {
+  return [e{std::move(e)}](Args... args) -> R {
+    ignore(args...);
+    throw e;
+  };
+}
+
+template <typename R, typename... Args>
+const std::function<std::optional<R>(Args...)> ConstNullopt = [](Args... args) -> std::optional<R> {
+  ignore(args...);
+  return std::nullopt;
+};
+
+template <typename T>
+const std::function<T(T)> id = [](T t) -> T { return t; };
+
+template <typename T>
+const std::function<std::optional<T>(T)> just = [](T t) -> std::optional<T> { return t; };
+
+template <typename R, typename Arg>
+const std::function<R(Arg)> static_cast_f = [](Arg arg) -> R { return static_cast<R>(arg); };
+
+template <typename T, typename U, typename... Args>
+std::function<U(Args...)> operator^(std::function<U(T)> g, std::function<T(Args...)> f) {
+  return [f{std::move(f)}, g{std::move(g)}](Args... args) -> U {
+    return g(f(args...));
+  };
+}
+
+#define parseUnit(unit, str, start) std::size_t unit##Start = start; std::size_t unit##End = str.find(':', unit##Start); std::string unit = str.substr(unit##Start, unit##End - unit##Start)
 
 #endif

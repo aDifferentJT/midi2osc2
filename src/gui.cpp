@@ -1,27 +1,9 @@
 #include "gui.hpp"
-#include <iostream>                                // for operator<<, endl
-#include "utils.hpp"                               // for bindMember
-#include "websocketpp/close.hpp"                   // for going_away
-#include "websocketpp/error.hpp"                   // for exception
-#include "websocketpp/frame.hpp"                   // for text
-#include "websocketpp/impl/endpoint_impl.hpp"      // for endpoint::close
-#include "websocketpp/logger/levels.hpp"           // for alevel, alevel::all
-#include "websocketpp/message_buffer/message.hpp"  // for message
-namespace asio { class io_context; }
-
-void GUI::openHandler(const Connection& connection) {
-  connections.insert(connection);
-  openCallback();
-}
-
-void GUI::closeHandler(const Connection& connection) {
-  connections.erase(connection);
-}
-
-void GUI::recvHandler(const Connection& connection, const Message& message) {
-  (void)connection;
-  recvCallback(message->get_payload());
-}
+#include <iostream>                       // for operator<<, endl, basic_ost...
+#include "utils.hpp"                      // for bindMember
+#include "websocketpp/error.hpp"          // for exception
+#include "websocketpp/logger/levels.hpp"  // for alevel, alevel::all
+namespace asio { class io_context; }  // lines 10-10
 
 GUI::GUI(asio::io_context& io_context) {
   try {
@@ -37,19 +19,6 @@ GUI::GUI(asio::io_context& io_context) {
     std::cerr << e.what() << std::endl;
   } catch (...) {
     std::cerr << "other exception" << std::endl;
-  }
-}
-
-GUI::~GUI() {
-  for (const Connection& connection : connections) {
-    server.close(connection, websocketpp::close::status::going_away, "Server closing");
-  }
-  server.stop_listening();
-}
-
-void GUI::send(const std::string& str) {
-  for (const Connection& connection : connections) {
-    server.send(connection, str.c_str(), str.size(), websocketpp::frame::opcode::text);
   }
 }
 

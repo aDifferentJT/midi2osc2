@@ -8,12 +8,10 @@
 #include <thread>      // for sleep_for
 #include <variant>     // for get
 #include "config.hpp"  // for Config
-#include "gui.hpp"     // for GUI
+
 #include <fstream> // IWYU pragma: keep
 
-
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+std::mutex Midi::faderStateMutex;
 
 Midi::Profile::Profile(const std::string& filename) {
   std::ifstream f(filename);
@@ -31,14 +29,13 @@ Midi::Profile::Profile(const std::string& filename) {
         return;
       default:
         f.unget();
-        std::cerr << "Unrecognised control: " << f.get() << std::endl;
-        throw;
+        throw std::runtime_error("Unrecognised control: " + std::string(1, f.get()));
     }
     int n;
     f >> n;
     number = static_cast<uint8_t>(n);
     int cEnc = (static_cast<int>(type) << 8) | number;
-    if (f.get() != ':') { throw; }
+    if (f.get() != ':') { throw std::runtime_error("No control name in profile"); }
     std::string str;
     std::getline(f, str);
     std::size_t catchIndicatorInd = str.find(':');
@@ -83,6 +80,7 @@ void Midi::setLed(uint8_t number, bool value) {
   } else {
     std::vector<unsigned char> message({0x90, number, value ? static_cast<uint8_t>(0x7F) : static_cast<uint8_t>(0x00)});
     rtMidiOut.sendMessage(&message);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 }
 
@@ -115,6 +113,7 @@ void Midi::midiCallback(double timeStamp, std::vector<unsigned char>* message, v
       midi->callback({control, value});
       break;
     case MidiControl::Type::Fader:
+      std::lock_guard lock(faderStateMutex);
       value = static_cast<float>(std::get<uint8_t>(event.value)) / 127.0;
       try {
         FaderState state = midi->faderStates.at(event.control.number);
@@ -138,10 +137,16 @@ void Midi::midiCallback(double timeStamp, std::vector<unsigned char>* message, v
   }
 }
 
+void Midi::midiErrorCallback(RtMidiError::Type type, const std::string &errorText, void *userData) {
+  (void)type;
+  (void)userData;
+  std::cout << "Error: " << errorText << std::endl;
+}
+
 Midi::Midi(const std::string& deviceName, const std::string& profileFilename)
   : rtMidiIn(RtMidi::UNSPECIFIED, "midi2osc2")
   , rtMidiOut(RtMidi::UNSPECIFIED, "midi2osc2")
-  , profile(profileFilename)
+    , profile(profileFilename)
     , isMock(deviceName == "mock")
 {
   if (!isMock) {
@@ -154,8 +159,7 @@ Midi::Midi(const std::string& deviceName, const std::string& profileFilename)
       }
     }
     if (portNumber == (unsigned int)-1) {
-      std::cerr << "Midi device not found" << std::endl;
-      throw;
+      throw std::runtime_error("Midi device not found");
     }
     rtMidiIn.openPort(portNumber);
     rtMidiOut.openPort(portNumber);
@@ -167,6 +171,8 @@ Midi::Midi(const std::string& deviceName, const std::string& profileFilename)
       setLed(led, false);
     }
     rtMidiIn.setCallback(&Midi::midiCallback, this);
+    rtMidiIn.setErrorCallback(&Midi::midiErrorCallback, this);
+    rtMidiOut.setErrorCallback(&Midi::midiErrorCallback, this);
   }
 }
 
@@ -177,6 +183,7 @@ Midi::~Midi() {
 }
 
 void Midi::feedback(const std::string& controlS, float v) {
+  std::lock_guard lock(faderStateMutex);
   MidiControl control = profile.controlFromString(controlS);
   switch (control.type) {
     case MidiControl::Type::Button:

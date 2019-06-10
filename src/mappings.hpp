@@ -1,17 +1,20 @@
 #ifndef Mapping_h
 #define Mapping_h
 
+#include <algorithm>      // for transform
 #include <fstream>        // for size_t
+#include <functional>     // for function
+#include <iterator>       // for back_insert_iterator, back_inserter
 #include <optional>       // for optional, nullopt
 #include <set>            // for set
 #include <stdexcept>      // for out_of_range
-#include <string>         // for string, allocator, operator+, char_traits
+#include <string>         // for string, basic_string, allocator, operator+
 #include <unordered_map>  // for unordered_map, unordered_map<>::mapped_type
-#include <utility>        // for move
-#include <vector>         // for vector
+#include <utility>        // for move, pair, make_pair
+#include <vector>         // for vector, vector<>::iterator
 #include "config.hpp"     // for Config
-#include "midi.hpp"       // for Midi::Event, Midi
-#include "utils.hpp"
+#include "midi.hpp"       // for Midi
+#include "utils.hpp"      // for bindFirst, constructor
 
 class Mappings {
   private:
@@ -19,24 +22,24 @@ class Mappings {
       const std::string output;
       const std::string path;
       bool inverted = false;
-      ControlOutput(const std::string& str, std::size_t start = 0);
       ControlOutput() = default;
       ControlOutput(std::string output, std::string path, bool inverted) : output(std::move(output)), path(std::move(path)), inverted(inverted) {}
+      static ControlOutput parse(const std::string& str, std::size_t start = 0);
       std::string encode() const { return output + ":" + path + ":" + (inverted ? "true" : "false"); }
     };
     struct ChannelOutput {
       const std::string output;
       const std::string channel;
-      ChannelOutput(const std::string& str, std::size_t start = 0);
       ChannelOutput() = default;
       ChannelOutput(std::string output, std::string channel) : output(std::move(output)), channel(std::move(channel)) {}
+      static ChannelOutput parse(const std::string& str, std::size_t start = 0);
       std::string encode() const { return output + ":" + channel; }
     };
     struct ActionOutput {
       const std::string action;
-      ActionOutput(const std::string& str, std::size_t start = 0);
       ActionOutput() = default;
-      ActionOutput(std::string action) : action(std::move(action)) {}
+      explicit ActionOutput(std::string action) : action(std::move(action)) {}
+      static ActionOutput parse(const std::string& str, std::size_t start = 0);
       std::string encode() const { return action; }
     };
     struct Mapping {
@@ -116,14 +119,14 @@ class Mappings {
 
     void refreshBank();
 
-    void midiCallback(Midi::Event event);
-    void midiMockCallback(std::string led, bool value);
+    void midiCallback(const Midi::Event& event);
+    void midiMockCallback(const std::string& led, bool value);
     void outputCallback(const std::string& path, float v);
     void guiOpenCallback();
     void guiRecvCallback(const std::string& str);
 
     void load() {
-      std::transform(config.banks.begin(), config.banks.end(), std::back_inserter(mappings), bindFirst<Mapping, const Config&, std::string>(constructor<Mapping, const Config&, std::string>(), this->config));
+      std::transform(config.banks.begin(), config.banks.end(), std::back_inserter(mappings), bindFirst<Mapping, const Config&, std::string>(Constructor<Mapping>(), this->config));
     }
   public:
     Mappings(Config& config);
