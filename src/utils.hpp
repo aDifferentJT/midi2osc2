@@ -143,4 +143,11 @@ std::function<U(Args...)> operator^(std::function<U(T)> g, std::function<T(Args.
 
 #define parseUnit(unit, str, start) std::size_t unit##Start = start; std::size_t unit##End = str.find(':', unit##Start); std::string unit = str.substr(unit##Start, unit##End - unit##Start)
 
+namespace endian {
+  enum endianness {
+    little, big
+  };
+  constexpr endianness native = endianness::little;
+}
+
 #endif

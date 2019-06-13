@@ -43,25 +43,25 @@ class OSC final : public Output {
         Message(std::string addressPattern, std::vector<Type> types, std::vector<Argument> arguments)
           : addressPattern(std::move(addressPattern)), types(std::move(types)), arguments(std::move(arguments)) {}
       private:
-        template <typename T> static Type forType();
-        template <> Type forType<int>              () { return Type::i; }
-        template <> Type forType<float>            () { return Type::f; }
-        template <> Type forType<std::string>      () { return Type::s; }
-        template <> Type forType<std::vector<char>>() { return Type::b; }
+        template <typename T> static constexpr Type forType();
+        template <> constexpr Type forType<int>              () { return Type::i; }
+        template <> constexpr Type forType<float>            () { return Type::f; }
+        template <> constexpr Type forType<std::string>      () { return Type::s; }
+        template <> constexpr Type forType<std::vector<char>>() { return Type::b; }
 
         template <typename T>
           static std::vector<char> makeOSCnum(T v) {
             char* p = (char*)&v;
             std::size_t n = sizeof(T);
             std::vector<char> res(p, p + n);
-            if (std::endian::native == std::endian::little) {
+            if (endian::native == endian::little) {
               std::reverse(res.begin(), res.end());
             }
             return res;
           }
         template <typename T>
           static T unmakeOSCnum(std::vector<char> v) {
-            if (std::endian::native == std::endian::little) {
+            if (endian::native == endian::little) {
               std::reverse(v.begin(), v.end());
             }
             return *(T*)v.begin();
@@ -69,7 +69,7 @@ class OSC final : public Output {
         template <typename T>
           static T unmakeOSCnum(char* v) {
             std::size_t n = sizeof(T);
-            if (std::endian::native == std::endian::little) {
+            if (endian::native == endian::little) {
               std::reverse(v, v + n);
             }
             return *(T*)v;

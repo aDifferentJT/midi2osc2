@@ -1,5 +1,7 @@
 mkdir build
 cd build
+#export CC="gcc"
+#export CXX="g++"
 export CC="clang"
 export CXX="clang++"
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
