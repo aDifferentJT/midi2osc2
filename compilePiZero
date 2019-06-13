@@ -1,0 +1,7 @@
+mkdir buildPi
+cd buildPi
+export CC="clang"
+export CXX="clang++"
+export CLANG_DEFAULT_CXX_STDLIB="libc++"
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE=./Toolchain-pi-zero.cmake -DCMAKE_LINKER=ld.lld-7 ..
+cmake --build .
