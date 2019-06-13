@@ -44,11 +44,6 @@ class OSC final : public Output {
           : addressPattern(std::move(addressPattern)), types(std::move(types)), arguments(std::move(arguments)) {}
       private:
         template <typename T> static constexpr Type forType();
-        template <> constexpr Type forType<int>              () { return Type::i; }
-        template <> constexpr Type forType<float>            () { return Type::f; }
-        template <> constexpr Type forType<std::string>      () { return Type::s; }
-        template <> constexpr Type forType<std::vector<char>>() { return Type::b; }
-
         template <typename T>
           static std::vector<char> makeOSCnum(T v) {
             char* p = (char*)&v;
@@ -213,6 +208,11 @@ class OSC final : public Output {
     }
     std::pair<std::string, bool> merge(const std::string& channel, const std::string& action) const override;
 };
+
+        template <> constexpr OSC::Message::Type OSC::Message::forType<int>              () { return Type::i; }
+        template <> constexpr OSC::Message::Type OSC::Message::forType<float>            () { return Type::f; }
+        template <> constexpr OSC::Message::Type OSC::Message::forType<std::string>      () { return Type::s; }
+        template <> constexpr OSC::Message::Type OSC::Message::forType<std::vector<char>>() { return Type::b; }
 
 #endif
 

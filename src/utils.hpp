@@ -50,7 +50,7 @@ std::optional<U> getOpt(std::unordered_map<T,U> xs, T x) {
 template <typename T>
 struct Constructor {
   template <typename... Args>
-    T operator() (const Args&... args) const { return T(args...); };
+    T operator() (const Args&... args) const { return T(args...); }
 };
 
 template <typename R, typename T, typename... Args>
